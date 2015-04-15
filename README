@@ -1,0 +1,5 @@
+Author: Yilin Tao
+Email: ytao3@binghamton.edu
+
+This is a file distributed system, which is implemented by C++ and thrift.
+The algorithm is based on chord.
