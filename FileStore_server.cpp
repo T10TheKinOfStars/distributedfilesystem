@@ -16,12 +16,10 @@ using namespace ::apache::thrift::server;
 
 using boost::shared_ptr;
 
+FileWorker fwoker;
+
 class FileStoreHandler : virtual public FileStoreIf {
  public:
-  //map<filename,rfilemetadata>
-  //real filename is user_filename
-  typedef std::unordered_map<std::string, RFileMetadata> NameDataMap;
-
   FileStoreHandler() {
     // Your initialization goes here
   }
@@ -29,126 +27,49 @@ class FileStoreHandler : virtual public FileStoreIf {
   void listOwnedFiles(std::vector<RFileMetadata> & _return, const UserID& user) {
     // Your implementation goes here
     printf("listOwnedFiles\n");
-    if (UserFileMap.find(user) == UserFileMap.end()) {
-        //this userid not exit
-        return;
-    } else {
-        NameDataMap files = UserFileMap[user];
-        for (auto it = files.begin(); it != files.end(); ++it) {
-            if (it->seond.deleted == 0) {
-                //0 is for not deleted
-                _return.push_back(it->second);
-            }
-        }
-        return;
+    if (UserFileMap.find(user) != UserFileMap.end()) {
+        fwoker.getfiles(user,_return);
   }
 
   void writeFile(StatusReport& _return, const RFile& rFile) {
     // Your implementation goes here
-    printf("writeFile\n");
-    UserID id = rFile.meta.owner;
-    std::string filename = id + "_" + rFile.meta.filename;
-    SystemException exception;
-    if (UserFileMap.find(id) == UserFileMap.end() && UserFileMap[id].deleted != 0) {
-        //this user doesn't exist
-        //create a new entry
-        NameDataMap data = {{filename,rFile.meta}};
-        UserFileMap.insert({id,data});
-        std::ofstream ofs(filename,ios::binary);
-        if (ofs) {            
-            ofs<<rFile.content;
-            ofs.close();
-            files[filename].__set_version = 0;            
-            files[filename].__set_contentHash = md5(rFile.content);
-            files[filename].__set_created((TimeStamp)time(NULL) * 1000);    //need to change
-            files[filename].__set_updated((TimeStamp)time(NULL) * 1000);    //need to change
-            files[filename].__set_deleted(0);
-        } else {
-            exception.__set_message("create file error\n");
-            throw exception;
-        }
+    //printf("writeFile\n");
+    if (fworker.writefile(rFile) != -1) {
+        _return.__set_status(SUCCESSFUL);
     } else {
-        //this user exists
-        NameDataMap files = UserFileMap[id];
-        if (files.find(filename) == files.end() && files[filename].deleted != 0) {
-            //this file not exists, we need create a new one
-            files.insert({filename,rFile.meta});
-            std::ofstream ofs(filename, ios::binary);
-            if (ofs) {
-                ofs<<rFile.content;
-                ofs.close();
-                files[filename].__set_version = 0;
-                files[filename].contentHash = md5(rFile.content);
-                files[filename].__set_created((TimeStamp)time(NULL) * 1000);    //need to change
-                files[filename].__set_updated((TimeStamp)time(NULL) * 1000);    //need to change
-                files[filename].__set_deleted = 0;
-            } else {
-                exception.__set_message("create file error\n");
-                throw exception;
-            }
-        } else {
-            //this file exists, we need do update
-            std::ofstream ofs(filename, ios::binary);
-            if (ofs) {
-            ofs<<rFile.content;
-            ofs.close();
-            ++files[filename].version;
-            files[filename].__set_contentHash(md5(rFile.content));
-            files[filename].updated((TimeStamp)time(NULL) * 1000);    //need to change
-            } else {
-                exception.__set_message("create file error\n");
-                throw exception;
-            }
-        }
+        _return.__set_status(FAILED);
     }
-    _return = 1;
-    return;
   }
 
   void readFile(RFile& _return, const std::string& filename, const UserID& owner) {
     // Your implementation goes here
-    printf("readFile\n");
-    if (UserFileMap.find(owner) == UserFileMap.end()) {
-        //Do not have this user, return
-        return;
-    } else {
-        NameDataMap files = UserFileMap[owner];        
-        std::string fname = owner + "_" + filename;
-        RFileMetadata data = files[filename];
-        std::ifstream ifs(fname.c_str(), ios::binary);
-        char *buf = new char[data.contentLength + 1];
-        ifs.read(buf,contentLength);
-        buf[contentLength] = '\0';
-        _return.content = buf;
-        _return.meta = data;
-
-        //update _return
-        //...
-        return;
+    //printf("readFile\n");
+    if (UserFileMap.find(owner) != UserFileMap.end()) {
+        if (fworker.readfile(owner,filename,_return) == -1) {
+            SystemException se;
+            se.__set_message("read file failed");
+            throw se;
+        }
     }
   }
 
   void deleteFile(StatusReport& _return, const std::string& filename, const UserID& owner) {
     // Your implementation goes here
-    printf("deleteFile\n");
+    //printf("deleteFile\n");
     if (UserFileMap.find(owner) == UserFileMap.end()) {
         //not this user, return
         _return.__set_status(FAILED);
-        return;
     } else {
-        NameDataMap files = UserFileMap[owner];        
-        RFileMetadata data = files[filename];
-        //update UserFileMap
-        //...
-        data.deleted((TimeStamp)time(NULL) * 1000);
-        data.version = 0;
-        _return.__set_status(SUCCESSFUL);
-        return;
+        if (fworker.deletefile(owner,filename) != -1) {
+            _return.__set_status(SUCCESSFUL);
+        } else {
+            _return.__set_status(FAILED);
+            SystemException se;
+            se.__set_message("read file failed");
+            throw se;
+        }
     }
-  }
- private:
-  std::unordered_map<UserID, name_data_map> UserFileMap;
-   
+  }   
 };
 
 int main(int argc, char **argv) {
@@ -160,6 +81,7 @@ int main(int argc, char **argv) {
   shared_ptr<TProtocolFactory> protocolFactory(new TBinaryProtocolFactory());
 
   TSimpleServer server(processor, serverTransport, transportFactory, protocolFactory);
+  fworker.initFolder();
   server.serve();
   return 0;
 }

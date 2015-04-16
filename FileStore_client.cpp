@@ -34,7 +34,7 @@ int main(int argc, char* argv[]) {
     std::string filename;
     std::string user;
     RFile rfile;
-    FileMetadata fdata;
+    FileMetadata data;
     StatusReport status;
 
     boost::shared_ptr<TTransport> socket(new TSocket(argv[1], atoi(argv[2])));
@@ -71,6 +71,7 @@ int main(int argc, char* argv[]) {
             } catch (SystemException se) {
                 //format se in json format
                 std::cout<<ThriftJSONString(se)<<std::endl;
+                return -1;
             }
             //format rfile in json format
             std::cout<<ThriftJSONString(rfile)<<std::endl;
@@ -103,6 +104,7 @@ int main(int argc, char* argv[]) {
             } catch (SystemException se) {
                 //format se information in json format
                 std::cout<<ThriftJSONString(se)<<std::endl;
+                return -1;
             }
             //format status in json format
             std::cout<<ThriftJSONString(status)<<std::endl;
@@ -112,6 +114,7 @@ int main(int argc, char* argv[]) {
             } catch (SystemException se) {
                 //format se information in json format
                 std::cout<<ThriftJSONString(se)<<std::endl;
+                return -1;
             }
             //format status in json format
             std::cout<<ThriftJSONString(status)<<std::endl;
@@ -122,6 +125,7 @@ int main(int argc, char* argv[]) {
             } catch (SystemException se) {
                 //format se information in json format
                 std::cout<<ThriftJSONString(se)<<std::endl;
+                return -1;
             }
             //format datas in json format
             std::cout<<apache::thrift::ThriftJSONString(datas)<<std::endl;
@@ -133,6 +137,7 @@ int main(int argc, char* argv[]) {
         transport->close();
     } catch (TException &tx) {
         std::cout<<"ERROR: "<<tx.what()<<std::endl;
+        return -1;
     }
 
     return 0;
