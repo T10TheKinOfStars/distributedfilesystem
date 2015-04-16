@@ -1,6 +1,7 @@
 #include <iostream>
 #include "FileStore.h"
 #include <getopt.h>
+#include <vector>
 #include <cstdlib>
 #include <vector>
 #include <thrift/protocol/TBinaryProtocol.h>
@@ -65,36 +66,65 @@ int main(int argc, char* argv[]) {
         }
 
         if (operation == "read") {
-            //init rfile
-            data.__set_filename(filename);
-            data.__set_owner(user);
-            rfile.__set_meta(data);
-            
-            client.readFile(rfile,filename,user);
+            try {
+                client.readFile(rfile,filename,user);
+            } catch (SystemException se) {
+                //format se in json format
+                std::cout<<ThriftJSONString(se)<<std::endl;
+            }
             //format rfile in json format
-            //...
+            std::cout<<ThriftJSONString(rfile)<<std::endl;
         } else if (operation == "write") {
             //init rfile
             data.__set_filename(filename);
             data.__set_version(0);
             data.__set_owner(user);
             
-            //read data from disk
-            //...
+            //read data from disk            
             std::ifstream ifs(filename.c_str(),ios::binary);
-
-            client.writeFile(status,rfile);
+            if (ifs) {
+                ifs.seekg(0,ifs.end());
+                int len = ifs.tellg();
+                ifs.seekg(0,ifs.beg());
+                char *buf = new char[len+1];
+                ifs.read(buf,len);
+                buf[len] = '\0';
+                ifs.close();
+                delete []buf;
+                data.__set_contentLength(len);
+                rfile.__set_content(buf);
+                rfile.__set_meta(data);
+            } else {
+                std::cerr<<"read file error!\n";
+                return -1;
+            }
+            try {
+                client.writeFile(status,rfile);
+            } catch (SystemException se) {
+                //format se information in json format
+                std::cout<<ThriftJSONString(se)<<std::endl;
+            }
             //format status in json format
-            //...
+            std::cout<<ThriftJSONString(status)<<std::endl;
         } else if (operation == "delete") {
-            client.deleteFile(status, filename, user);
+            try {
+                client.deleteFile(status, filename, user);
+            } catch (SystemException se) {
+                //format se information in json format
+                std::cout<<ThriftJSONString(se)<<std::endl;
+            }
             //format status in json format
-            //...
+            std::cout<<ThriftJSONString(status)<<std::endl;
         } else if (operation == "list") {
             std::vector<RFileMetadata> datas;
-            client.listOwnedFiles(datas,user);
+            try {
+                client.listOwnedFiles(datas,user);
+            } catch (SystemException se) {
+                //format se information in json format
+                std::cout<<ThriftJSONString(se)<<std::endl;
+            }
             //format datas in json format
-            //....
+            std::cout<<apache::thrift::ThriftJSONString(datas)<<std::endl;
         } else {
             std::cerr<<"operation argument error"<<std::endl;
             return 0;
@@ -104,4 +134,6 @@ int main(int argc, char* argv[]) {
     } catch (TException &tx) {
         std::cout<<"ERROR: "<<tx.what()<<std::endl;
     }
+
+    return 0;
 }

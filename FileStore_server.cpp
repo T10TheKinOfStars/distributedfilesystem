@@ -58,12 +58,11 @@ class FileStoreHandler : virtual public FileStoreIf {
         if (ofs) {            
             ofs<<rFile.content;
             ofs.close();
-            files[filename].version = 0;
-            files[filename].contentLength = rFile.content.size();
-            files[filename].contentHash = md5(rFile.content);
-            files[filename].created = 0;    //need to change
-            files[filename].updated = 0;    //need to change
-            files[filename].deleted = 0;
+            files[filename].__set_version = 0;            
+            files[filename].__set_contentHash = md5(rFile.content);
+            files[filename].__set_created((TimeStamp)time(NULL) * 1000);    //need to change
+            files[filename].__set_updated((TimeStamp)time(NULL) * 1000);    //need to change
+            files[filename].__set_deleted(0);
         } else {
             exception.__set_message("create file error\n");
             throw exception;
@@ -78,12 +77,11 @@ class FileStoreHandler : virtual public FileStoreIf {
             if (ofs) {
                 ofs<<rFile.content;
                 ofs.close();
-                files[filename].version = 0;
-                files[filename].contentLength = rFile.content.size();
+                files[filename].__set_version = 0;
                 files[filename].contentHash = md5(rFile.content);
-                files[filename].created = 0;    //need to change
-                files[filename].updated = 0;    //need to change
-                files[filename].deleted = 0;
+                files[filename].__set_created((TimeStamp)time(NULL) * 1000);    //need to change
+                files[filename].__set_updated((TimeStamp)time(NULL) * 1000);    //need to change
+                files[filename].__set_deleted = 0;
             } else {
                 exception.__set_message("create file error\n");
                 throw exception;
@@ -95,9 +93,8 @@ class FileStoreHandler : virtual public FileStoreIf {
             ofs<<rFile.content;
             ofs.close();
             ++files[filename].version;
-            files[filename].contentLength = rFile.content.size();
-            files[filename].contentHash = md5(rFile.content);
-            files[filename].updated = 0;    //need to change
+            files[filename].__set_contentHash(md5(rFile.content));
+            files[filename].updated((TimeStamp)time(NULL) * 1000);    //need to change
             } else {
                 exception.__set_message("create file error\n");
                 throw exception;
@@ -125,6 +122,8 @@ class FileStoreHandler : virtual public FileStoreIf {
         _return.content = buf;
         _return.meta = data;
 
+        //update _return
+        //...
         return;
     }
   }
@@ -134,14 +133,16 @@ class FileStoreHandler : virtual public FileStoreIf {
     printf("deleteFile\n");
     if (UserFileMap.find(owner) == UserFileMap.end()) {
         //not this user, return
-        _return.status = 0;
+        _return.__set_status(FAILED);
         return;
     } else {
         NameDataMap files = UserFileMap[owner];        
         RFileMetadata data = files[filename];
-        data.deleted = 1;
+        //update UserFileMap
+        //...
+        data.deleted((TimeStamp)time(NULL) * 1000);
         data.version = 0;
-        _return.status = 1;
+        _return.__set_status(SUCCESSFUL);
         return;
     }
   }
