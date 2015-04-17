@@ -87,10 +87,10 @@ int main(int argc, char** argv) {
                 ifs.read(buf,len);
                 buf[len] = '\0';
                 ifs.close();
-                delete []buf;
                 data.__set_contentLength(len);
                 rfile.__set_content(buf);
                 rfile.__set_meta(data);
+                delete []buf;
             } else {
                 std::cerr<<"read file error!\n";
                 return -1;

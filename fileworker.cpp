@@ -3,7 +3,7 @@
 #include <fstream>
 
 void FileWorker::initFolder() {
-    std::string cmd = "mkdir files";    
+    std::string cmd = "rm -rf files | mkdir files";    
     if (system(cmd.c_str()) == -1) {
         SystemException se;
         se.__set_message("create folder failed");
@@ -13,12 +13,13 @@ void FileWorker::initFolder() {
 
 int FileWorker::readFromDisk(std::string path, int fsize, std::string &content) {
     std::ifstream ifs(path.c_str(), std::ios::binary);
-
     if (ifs) {   
         char *buf = new char[fsize + 1];
         ifs.read(buf,fsize);
         buf[fsize] = '\0';
+        content = buf;
         ifs.close();
+        delete []buf;
     } else {
         return -1;
     }
@@ -49,10 +50,11 @@ int FileWorker::writefile(const RFile &_rfile) {
     RFileMetadata rdata = rfile.meta;
     UserID id = rdata.owner;
     std::string filename = rdata.filename;
-    std::string path = ".//files//" + id + "_" + filename;
+    std::string path = "./files/" + id + "_" + filename;
     SystemException exception;
+    
     if (UserFileMap.find(id) == UserFileMap.end()) {
-        //this user doesn't exist
+        std::cout<<"this user doesn't exist"<<std::endl;
         //create a new entry                
         if (write2Disk(path,rfile.content) != -1) {
             rdata.__set_version(0);            
@@ -67,24 +69,24 @@ int FileWorker::writefile(const RFile &_rfile) {
             return -1;
         }
     } else {
-        //this user exists
+        //std::cout<<"this user exists"<<std::endl;
         NameDataMap files = UserFileMap[id];
-        if (files.find(filename) == files.end() && files[filename].deleted != 0) {
-            //this file not exists, we need create a new one            
+        if (files.find(filename) == files.end() || files[filename].deleted != 0) {
+            std::cout<<"this file not exists, we need create a new one"<<std::endl;
             if (write2Disk(path,rfile.content) != -1) {
                 rdata.__set_version(0);
                 rdata.__set_contentHash(md5(rfile.content));
                 rdata.__set_created((Timestamp)time(NULL) * 1000);    //need to change
                 rdata.__set_updated((Timestamp)time(NULL) * 1000);    //need to change
                 rdata.__set_deleted(0);
-                files.insert({filename,rdata});
+                UserFileMap[id].insert(std::pair<std::string, RFileMetadata>(filename,rdata));
             } else {
                 return -1;
             }
         } else {
-            //this file exists, we need do update
-            NameDataMap files = UserFileMap[id];
-            if (write2Disk(path,rfile.content) != -1) {
+            std::cout<<"this file exists, we need do update"<<std::endl;
+            NameDataMap &files = UserFileMap[id];
+            if (write2Disk(path,rfile.content) != -1) {                
                 ++files[filename].version;
                 files[filename].__set_contentLength(rfile.content.size());
                 files[filename].__set_contentHash(md5(rfile.content));
@@ -98,12 +100,10 @@ int FileWorker::writefile(const RFile &_rfile) {
 }
 
 int FileWorker::deletefile(std::string id, std::string filename) {
-    std::string path = ".//files//" + id + "_" + filename;
-
+    std::string path = "./files/" + id + "_" + filename;    
     if (deleteFromDisk(path) != -1) {
-        NameDataMap files = UserFileMap[id];
-        RFileMetadata data = files[filename];    
-        data.__set_deleted((Timestamp)time(NULL) * 1000);
+        NameDataMap &files = UserFileMap[id];
+        files[filename].__set_deleted((Timestamp)time(NULL) * 1000);
     } else {
         return -1;
     }
@@ -112,9 +112,11 @@ int FileWorker::deletefile(std::string id, std::string filename) {
 }
 
 int FileWorker::readfile(std::string id, std::string filename, RFile &rfile) {
-    std::string path = ".//files//" + id + "_" + filename;
+    std::string path = "./files/" + id + "_" + filename;
     NameDataMap files = UserFileMap[id];
     RFileMetadata data = files[filename];
+    if (data.deleted != 0)
+        return -1;
     std::string content;
     if (readFromDisk(path,data.contentLength,content) != -1) {
         rfile.__set_content(content);
