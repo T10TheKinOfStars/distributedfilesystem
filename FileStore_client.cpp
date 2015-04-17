@@ -1,53 +1,49 @@
 #include <iostream>
 #include "FileStore.h"
+#include <unistd.h>
 #include <getopt.h>
 #include <vector>
+#include <fstream>
 #include <cstdlib>
-#include <vector>
-#include <thrift/protocol/TBinaryProtocol.h>
-#include <thrift/server/TSimpleServer.h>
-#include <thrift/transport/TServerSocket.h>
+#include <thrift/transport/TSocket.h>
 #include <thrift/transport/TBufferTransports.h>
+#include <thrift/protocol/TBinaryProtocol.h>
+#include <thrift/protocol/TJSONProtocol.h>
 
+using namespace std;
 using namespace ::apache::thrift;
 using namespace ::apache::thrift::protocol;
 using namespace ::apache::thrift::transport;
-using namespace ::apache::thrift::server;
 
 using boost::shared_ptr;
 
-int main(int argc, char* argv[]) {
-    if (argc < 8) {
-        std::cout<<"not enough arguments"<<std::endl;
-        return 0;
-    }
-
-    static struct option long_options[] = {
-        {"operation" , required_argument, 0, 'o'},
-        {"filename", required_argument, 0, 'f'},
-        {"user", required_argument, 0, 'u'},
-        {0,0,0,0}
-    }
+int main(int argc, char** argv) {
     int opt;
     int optidx;
     std::string operation;
     std::string filename;
     std::string user;
     RFile rfile;
-    FileMetadata data;
+    RFileMetadata data;
     StatusReport status;
-
-    boost::shared_ptr<TTransport> socket(new TSocket(argv[1], atoi(argv[2])));
+    
+    boost::shared_ptr<TSocket> socket(new TSocket(argv[1], atoi(argv[2])));
     boost::shared_ptr<TTransport> transport(new TBufferedTransport(socket));
     boost::shared_ptr<TProtocol> protocol(new TBinaryProtocol(transport)); 
     boost::shared_ptr<TMemoryBuffer> buffer(new TMemoryBuffer());
-    boost::shared_ptr<TJSONProtocol> jsonprotocol(new TJSONProtocol(buffer));
+    TJSONProtocol jsonprotocol(buffer);
 
     FileStoreClient client(protocol);
     try {
         transport->open();
 
-        while ((opt = getopt(argc-2,argv + 2, "o:f:u", long_options, &optidx)) != -1) {
+        static struct option long_options[] = {
+            {"operation" , required_argument, 0, 'o'},
+            {"filename", required_argument, 0, 'f'},
+            {"user", required_argument, 0, 'u'},
+            {0,0,0,0}
+        };
+        while ((opt = getopt_long(argc-2,argv + 2, "o:f:u", long_options, &optidx)) != -1) {
             //-1 means it reaches end
             switch (opt) {
                 case 'o':
@@ -60,7 +56,7 @@ int main(int argc, char* argv[]) {
                     user = optarg;
                     break;
                 default:
-                    std::cout<<"operation error"<<std<<endl;
+                    std::cout<<"operation error"<<std::endl;
                     return -1;
             }
         }
@@ -82,11 +78,11 @@ int main(int argc, char* argv[]) {
             data.__set_owner(user);
             
             //read data from disk            
-            std::ifstream ifs(filename.c_str(),ios::binary);
+            std::ifstream ifs(filename.c_str(),std::ios::binary);
             if (ifs) {
-                ifs.seekg(0,ifs.end());
+                ifs.seekg(0,ifs.end);
                 int len = ifs.tellg();
-                ifs.seekg(0,ifs.beg());
+                ifs.seekg(0,ifs.beg);
                 char *buf = new char[len+1];
                 ifs.read(buf,len);
                 buf[len] = '\0';
@@ -128,7 +124,13 @@ int main(int argc, char* argv[]) {
                 return -1;
             }
             //format datas in json format
-            std::cout<<apache::thrift::ThriftJSONString(datas)<<std::endl;
+            jsonprotocol.writeListBegin(::apache::thrift::protocol::T_STRUCT, datas.size());
+            for(int i = 0; i < (signed)datas.size(); i++) {
+                datas[i].write(&jsonprotocol);
+            }
+            jsonprotocol.writeListEnd();
+
+            std::cout << buffer->getBufferAsString()<< std::endl;
         } else {
             std::cerr<<"operation argument error"<<std::endl;
             return 0;

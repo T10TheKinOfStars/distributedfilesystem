@@ -3,7 +3,7 @@
 OPT=-O2
 #TEST=-DTEST
 DEBUG=-g -DDEBUG 
-THRIFT_PATH=/home/yilin/Graduate/cs557/thrift-0.9.2/lib
+THRIFT_PATH=/usr/local
 
 
 CFLAGS=-std=c++11 -Wall -Wno-format -fPIC $(OPT) $(DEBUG) $(TEST)
@@ -13,7 +13,7 @@ LIBS = -lthrift
 INCLUDE_PATH = -I $(THRIFT_PATH)/include/ -I $(THRIFT_PATH)/include/thrift/
 LIB_PATH = -L$(THRIFT_PATH)/lib/
 
-OBJS=FileStore.o fileservice_types.o fileservice_constants.o fileworker.o
+OBJS=FileStore.o fileservice_types.o fileservice_constants.o fileworker.o md5.o
 OBJSERVER=FileStore_server.o
 OBJCLIENT=FileStore_client.o
 

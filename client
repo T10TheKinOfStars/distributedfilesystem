@@ -5,7 +5,7 @@ if [ ! -f client.exec ]; then
     return
 fi
 
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/yilin/Graduate/cs557/thrift-0.9.2/lib
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
 ./client.exec $@
 
 
