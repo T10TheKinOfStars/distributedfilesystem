@@ -1,0 +1,11 @@
+#!/bin/sh
+
+if [ ! -f server.exec ]; then
+    echo "Please compile the program by 'make' first"
+    return
+fi
+
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
+./server.exec $1 ./files
+
+
