@@ -2,6 +2,7 @@
 // You should copy it to another filename to avoid overwriting it.
 
 #include "FileStore.h"
+#include "fileworker.h"
 #include <thrift/protocol/TBinaryProtocol.h>
 #include <thrift/server/TSimpleServer.h>
 #include <thrift/transport/TServerSocket.h>
@@ -14,6 +15,7 @@ using namespace ::apache::thrift::server;
 
 using boost::shared_ptr;
 
+FileWorker fworker;
 class FileStoreHandler : virtual public FileStoreIf {
  public:
   FileStoreHandler() {
@@ -22,17 +24,42 @@ class FileStoreHandler : virtual public FileStoreIf {
 
   void writeFile(const RFile& rFile) {
     // Your implementation goes here
-    printf("writeFile\n");
+    //printf("writeFile\n");
+    if (fworker.writefile(rFile) != -1) {
+        _return.__set_status(Status::SUCCESSFUL);
+    } else {
+        _return.__set_status(Status::FAILED);
+    }
   }
 
   void readFile(RFile& _return, const std::string& filename, const UserID& owner) {
     // Your implementation goes here
-    printf("readFile\n");
+    //printf("readFile\n");
+    if (fworker.getUserFileMap().find(owner) != fworker.getUserFileMap().end()) {
+        if (fworker.readfile(owner,filename,_return) == -1) {
+            SystemException se;
+            se.__set_message("read file failed");
+            throw se;
+        }
+    }
   }
 
   void deleteFile(const std::string& filename, const UserID& owner) {
     // Your implementation goes here
-    printf("deleteFile\n");
+    //printf("deleteFile\n");
+    if (fworker.getUserFileMap().find(owner) == fworker.getUserFileMap().end()) {
+        //not this user, return
+        _return.__set_status(Status::FAILED);
+    } else {
+        if (fworker.deletefile(owner,filename) != -1) {
+            _return.__set_status(Status::SUCCESSFUL);
+        } else {
+            _return.__set_status(Status::FAILED);
+            SystemException se;
+            se.__set_message("write file failed");
+            throw se;
+        }
+    }
   }
 
   void findSucc(NodeID& _return, const std::string& key) {
@@ -116,6 +143,7 @@ int main(int argc, char **argv) {
   shared_ptr<TProtocolFactory> protocolFactory(new TBinaryProtocolFactory());
 
   TSimpleServer server(processor, serverTransport, transportFactory, protocolFactory);
+  fworker.init();
   server.serve();
   return 0;
 }
