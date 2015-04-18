@@ -2,6 +2,8 @@
 // You should copy it to another filename to avoid overwriting it.
 
 #include "FileStore.h"
+#include "fileworker.h"
+#include "DHTController.h"
 #include <thrift/protocol/TBinaryProtocol.h>
 #include <thrift/server/TSimpleServer.h>
 #include <thrift/transport/TServerSocket.h>
@@ -14,6 +16,8 @@ using namespace ::apache::thrift::server;
 
 using boost::shared_ptr;
 
+FileWorker fworker;
+DHTController dhtcontrolller;
 class FileStoreHandler : virtual public FileStoreIf {
  public:
   FileStoreHandler() {
@@ -121,6 +125,8 @@ int main(int argc, char **argv) {
   shared_ptr<TProtocolFactory> protocolFactory(new TBinaryProtocolFactory());
 
   TSimpleServer server(processor, serverTransport, transportFactory, protocolFactory);
+
+  fworker.init();
   server.serve();
   return 0;
 }
