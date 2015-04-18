@@ -37,7 +37,12 @@ service FileStore {
 
   void deleteFile(1: string filename, 2: UserID owner)
     throws (1: SystemException systemException),
-
+    
+  void setFingertable(1: list<NodeID> node_list),
+  void updateFinger(1: i32 idx, 2: NodeID nodeId) throws (1: SystemException systemException),
+  list<NodeID> getFingertable() throws (1: SystemException systemException),
+  void fixFingers() throws (1: SystemException systemException),
+  
   NodeID findSucc(1: string key) throws (1: SystemException systemException),
   NodeID findPred(1: string key) throws (1: SystemException systemException),
   NodeID getNodeSucc() throws (1: SystemException systemException),
@@ -45,17 +50,14 @@ service FileStore {
   
   void setNodePred(1: NodeID nodeId) throws (1: SystemException systemException),
 
-  void updateFinger(1: i32 idx, 2: NodeID nodeId) throws (1: SystemException systemException),
-  list<NodeID> getFingertable() throws (1: SystemException systemException),
+
 
   list<RFile> pullUnownedFiles() throws (1: SystemException systemException),
   void pushUnownedFiles(1: list<RFile> files) throws (1: SystemException systemException),
 
   void join(1: NodeID nodeId) throws (1: SystemException systemException),
   void remove() throws (1: SystemException systemException),
-
-  void stabilize() throws (1: SystemException systemException),
-  
+  void stabilize() throws (1: SystemException systemException),  
   void notify(1: NodeID nodeId) throws (1: SystemException systemException),
-  void fixFingers() throws (1: SystemException systemException),
+  
 }

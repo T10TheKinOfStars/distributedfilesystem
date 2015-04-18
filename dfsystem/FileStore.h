@@ -18,20 +18,21 @@ class FileStoreIf {
   virtual void writeFile(const RFile& rFile) = 0;
   virtual void readFile(RFile& _return, const std::string& filename, const UserID& owner) = 0;
   virtual void deleteFile(const std::string& filename, const UserID& owner) = 0;
+  virtual void setFingertable(const std::vector<NodeID> & node_list) = 0;
+  virtual void updateFinger(const int32_t idx, const NodeID& nodeId) = 0;
+  virtual void getFingertable(std::vector<NodeID> & _return) = 0;
+  virtual void fixFingers() = 0;
   virtual void findSucc(NodeID& _return, const std::string& key) = 0;
   virtual void findPred(NodeID& _return, const std::string& key) = 0;
   virtual void getNodeSucc(NodeID& _return) = 0;
   virtual void getNodePred(NodeID& _return) = 0;
   virtual void setNodePred(const NodeID& nodeId) = 0;
-  virtual void updateFinger(const int32_t idx, const NodeID& nodeId) = 0;
-  virtual void getFingertable(std::vector<NodeID> & _return) = 0;
   virtual void pullUnownedFiles(std::vector<RFile> & _return) = 0;
   virtual void pushUnownedFiles(const std::vector<RFile> & files) = 0;
   virtual void join(const NodeID& nodeId) = 0;
   virtual void remove() = 0;
   virtual void stabilize() = 0;
   virtual void notify(const NodeID& nodeId) = 0;
-  virtual void fixFingers() = 0;
 };
 
 class FileStoreIfFactory {
@@ -70,6 +71,18 @@ class FileStoreNull : virtual public FileStoreIf {
   void deleteFile(const std::string& /* filename */, const UserID& /* owner */) {
     return;
   }
+  void setFingertable(const std::vector<NodeID> & /* node_list */) {
+    return;
+  }
+  void updateFinger(const int32_t /* idx */, const NodeID& /* nodeId */) {
+    return;
+  }
+  void getFingertable(std::vector<NodeID> & /* _return */) {
+    return;
+  }
+  void fixFingers() {
+    return;
+  }
   void findSucc(NodeID& /* _return */, const std::string& /* key */) {
     return;
   }
@@ -83,12 +96,6 @@ class FileStoreNull : virtual public FileStoreIf {
     return;
   }
   void setNodePred(const NodeID& /* nodeId */) {
-    return;
-  }
-  void updateFinger(const int32_t /* idx */, const NodeID& /* nodeId */) {
-    return;
-  }
-  void getFingertable(std::vector<NodeID> & /* _return */) {
     return;
   }
   void pullUnownedFiles(std::vector<RFile> & /* _return */) {
@@ -107,9 +114,6 @@ class FileStoreNull : virtual public FileStoreIf {
     return;
   }
   void notify(const NodeID& /* nodeId */) {
-    return;
-  }
-  void fixFingers() {
     return;
   }
 };
@@ -494,6 +498,459 @@ class FileStore_deleteFile_presult {
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
 
   friend std::ostream& operator<<(std::ostream& out, const FileStore_deleteFile_presult& obj);
+};
+
+typedef struct _FileStore_setFingertable_args__isset {
+  _FileStore_setFingertable_args__isset() : node_list(false) {}
+  bool node_list :1;
+} _FileStore_setFingertable_args__isset;
+
+class FileStore_setFingertable_args {
+ public:
+
+  static const char* ascii_fingerprint; // = "7BAD11F21558D0555AD88C571F9D5931";
+  static const uint8_t binary_fingerprint[16]; // = {0x7B,0xAD,0x11,0xF2,0x15,0x58,0xD0,0x55,0x5A,0xD8,0x8C,0x57,0x1F,0x9D,0x59,0x31};
+
+  FileStore_setFingertable_args(const FileStore_setFingertable_args&);
+  FileStore_setFingertable_args& operator=(const FileStore_setFingertable_args&);
+  FileStore_setFingertable_args() {
+  }
+
+  virtual ~FileStore_setFingertable_args() throw();
+  std::vector<NodeID>  node_list;
+
+  _FileStore_setFingertable_args__isset __isset;
+
+  void __set_node_list(const std::vector<NodeID> & val);
+
+  bool operator == (const FileStore_setFingertable_args & rhs) const
+  {
+    if (!(node_list == rhs.node_list))
+      return false;
+    return true;
+  }
+  bool operator != (const FileStore_setFingertable_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const FileStore_setFingertable_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+  friend std::ostream& operator<<(std::ostream& out, const FileStore_setFingertable_args& obj);
+};
+
+
+class FileStore_setFingertable_pargs {
+ public:
+
+  static const char* ascii_fingerprint; // = "7BAD11F21558D0555AD88C571F9D5931";
+  static const uint8_t binary_fingerprint[16]; // = {0x7B,0xAD,0x11,0xF2,0x15,0x58,0xD0,0x55,0x5A,0xD8,0x8C,0x57,0x1F,0x9D,0x59,0x31};
+
+
+  virtual ~FileStore_setFingertable_pargs() throw();
+  const std::vector<NodeID> * node_list;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+  friend std::ostream& operator<<(std::ostream& out, const FileStore_setFingertable_pargs& obj);
+};
+
+
+class FileStore_setFingertable_result {
+ public:
+
+  static const char* ascii_fingerprint; // = "99914B932BD37A50B983C5E7C90AE93B";
+  static const uint8_t binary_fingerprint[16]; // = {0x99,0x91,0x4B,0x93,0x2B,0xD3,0x7A,0x50,0xB9,0x83,0xC5,0xE7,0xC9,0x0A,0xE9,0x3B};
+
+  FileStore_setFingertable_result(const FileStore_setFingertable_result&);
+  FileStore_setFingertable_result& operator=(const FileStore_setFingertable_result&);
+  FileStore_setFingertable_result() {
+  }
+
+  virtual ~FileStore_setFingertable_result() throw();
+
+  bool operator == (const FileStore_setFingertable_result & /* rhs */) const
+  {
+    return true;
+  }
+  bool operator != (const FileStore_setFingertable_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const FileStore_setFingertable_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+  friend std::ostream& operator<<(std::ostream& out, const FileStore_setFingertable_result& obj);
+};
+
+
+class FileStore_setFingertable_presult {
+ public:
+
+  static const char* ascii_fingerprint; // = "99914B932BD37A50B983C5E7C90AE93B";
+  static const uint8_t binary_fingerprint[16]; // = {0x99,0x91,0x4B,0x93,0x2B,0xD3,0x7A,0x50,0xB9,0x83,0xC5,0xE7,0xC9,0x0A,0xE9,0x3B};
+
+
+  virtual ~FileStore_setFingertable_presult() throw();
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+  friend std::ostream& operator<<(std::ostream& out, const FileStore_setFingertable_presult& obj);
+};
+
+typedef struct _FileStore_updateFinger_args__isset {
+  _FileStore_updateFinger_args__isset() : idx(false), nodeId(false) {}
+  bool idx :1;
+  bool nodeId :1;
+} _FileStore_updateFinger_args__isset;
+
+class FileStore_updateFinger_args {
+ public:
+
+  static const char* ascii_fingerprint; // = "DD015B2001600A56F6D67E6F30D9E115";
+  static const uint8_t binary_fingerprint[16]; // = {0xDD,0x01,0x5B,0x20,0x01,0x60,0x0A,0x56,0xF6,0xD6,0x7E,0x6F,0x30,0xD9,0xE1,0x15};
+
+  FileStore_updateFinger_args(const FileStore_updateFinger_args&);
+  FileStore_updateFinger_args& operator=(const FileStore_updateFinger_args&);
+  FileStore_updateFinger_args() : idx(0) {
+  }
+
+  virtual ~FileStore_updateFinger_args() throw();
+  int32_t idx;
+  NodeID nodeId;
+
+  _FileStore_updateFinger_args__isset __isset;
+
+  void __set_idx(const int32_t val);
+
+  void __set_nodeId(const NodeID& val);
+
+  bool operator == (const FileStore_updateFinger_args & rhs) const
+  {
+    if (!(idx == rhs.idx))
+      return false;
+    if (!(nodeId == rhs.nodeId))
+      return false;
+    return true;
+  }
+  bool operator != (const FileStore_updateFinger_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const FileStore_updateFinger_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+  friend std::ostream& operator<<(std::ostream& out, const FileStore_updateFinger_args& obj);
+};
+
+
+class FileStore_updateFinger_pargs {
+ public:
+
+  static const char* ascii_fingerprint; // = "DD015B2001600A56F6D67E6F30D9E115";
+  static const uint8_t binary_fingerprint[16]; // = {0xDD,0x01,0x5B,0x20,0x01,0x60,0x0A,0x56,0xF6,0xD6,0x7E,0x6F,0x30,0xD9,0xE1,0x15};
+
+
+  virtual ~FileStore_updateFinger_pargs() throw();
+  const int32_t* idx;
+  const NodeID* nodeId;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+  friend std::ostream& operator<<(std::ostream& out, const FileStore_updateFinger_pargs& obj);
+};
+
+typedef struct _FileStore_updateFinger_result__isset {
+  _FileStore_updateFinger_result__isset() : systemException(false) {}
+  bool systemException :1;
+} _FileStore_updateFinger_result__isset;
+
+class FileStore_updateFinger_result {
+ public:
+
+  static const char* ascii_fingerprint; // = "DBAF2AD71D1470DBFC004F94C495FC06";
+  static const uint8_t binary_fingerprint[16]; // = {0xDB,0xAF,0x2A,0xD7,0x1D,0x14,0x70,0xDB,0xFC,0x00,0x4F,0x94,0xC4,0x95,0xFC,0x06};
+
+  FileStore_updateFinger_result(const FileStore_updateFinger_result&);
+  FileStore_updateFinger_result& operator=(const FileStore_updateFinger_result&);
+  FileStore_updateFinger_result() {
+  }
+
+  virtual ~FileStore_updateFinger_result() throw();
+  SystemException systemException;
+
+  _FileStore_updateFinger_result__isset __isset;
+
+  void __set_systemException(const SystemException& val);
+
+  bool operator == (const FileStore_updateFinger_result & rhs) const
+  {
+    if (!(systemException == rhs.systemException))
+      return false;
+    return true;
+  }
+  bool operator != (const FileStore_updateFinger_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const FileStore_updateFinger_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+  friend std::ostream& operator<<(std::ostream& out, const FileStore_updateFinger_result& obj);
+};
+
+typedef struct _FileStore_updateFinger_presult__isset {
+  _FileStore_updateFinger_presult__isset() : systemException(false) {}
+  bool systemException :1;
+} _FileStore_updateFinger_presult__isset;
+
+class FileStore_updateFinger_presult {
+ public:
+
+  static const char* ascii_fingerprint; // = "DBAF2AD71D1470DBFC004F94C495FC06";
+  static const uint8_t binary_fingerprint[16]; // = {0xDB,0xAF,0x2A,0xD7,0x1D,0x14,0x70,0xDB,0xFC,0x00,0x4F,0x94,0xC4,0x95,0xFC,0x06};
+
+
+  virtual ~FileStore_updateFinger_presult() throw();
+  SystemException systemException;
+
+  _FileStore_updateFinger_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+  friend std::ostream& operator<<(std::ostream& out, const FileStore_updateFinger_presult& obj);
+};
+
+
+class FileStore_getFingertable_args {
+ public:
+
+  static const char* ascii_fingerprint; // = "99914B932BD37A50B983C5E7C90AE93B";
+  static const uint8_t binary_fingerprint[16]; // = {0x99,0x91,0x4B,0x93,0x2B,0xD3,0x7A,0x50,0xB9,0x83,0xC5,0xE7,0xC9,0x0A,0xE9,0x3B};
+
+  FileStore_getFingertable_args(const FileStore_getFingertable_args&);
+  FileStore_getFingertable_args& operator=(const FileStore_getFingertable_args&);
+  FileStore_getFingertable_args() {
+  }
+
+  virtual ~FileStore_getFingertable_args() throw();
+
+  bool operator == (const FileStore_getFingertable_args & /* rhs */) const
+  {
+    return true;
+  }
+  bool operator != (const FileStore_getFingertable_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const FileStore_getFingertable_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+  friend std::ostream& operator<<(std::ostream& out, const FileStore_getFingertable_args& obj);
+};
+
+
+class FileStore_getFingertable_pargs {
+ public:
+
+  static const char* ascii_fingerprint; // = "99914B932BD37A50B983C5E7C90AE93B";
+  static const uint8_t binary_fingerprint[16]; // = {0x99,0x91,0x4B,0x93,0x2B,0xD3,0x7A,0x50,0xB9,0x83,0xC5,0xE7,0xC9,0x0A,0xE9,0x3B};
+
+
+  virtual ~FileStore_getFingertable_pargs() throw();
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+  friend std::ostream& operator<<(std::ostream& out, const FileStore_getFingertable_pargs& obj);
+};
+
+typedef struct _FileStore_getFingertable_result__isset {
+  _FileStore_getFingertable_result__isset() : success(false), systemException(false) {}
+  bool success :1;
+  bool systemException :1;
+} _FileStore_getFingertable_result__isset;
+
+class FileStore_getFingertable_result {
+ public:
+
+  static const char* ascii_fingerprint; // = "0E2136712E8A71263F5CA200C33C7303";
+  static const uint8_t binary_fingerprint[16]; // = {0x0E,0x21,0x36,0x71,0x2E,0x8A,0x71,0x26,0x3F,0x5C,0xA2,0x00,0xC3,0x3C,0x73,0x03};
+
+  FileStore_getFingertable_result(const FileStore_getFingertable_result&);
+  FileStore_getFingertable_result& operator=(const FileStore_getFingertable_result&);
+  FileStore_getFingertable_result() {
+  }
+
+  virtual ~FileStore_getFingertable_result() throw();
+  std::vector<NodeID>  success;
+  SystemException systemException;
+
+  _FileStore_getFingertable_result__isset __isset;
+
+  void __set_success(const std::vector<NodeID> & val);
+
+  void __set_systemException(const SystemException& val);
+
+  bool operator == (const FileStore_getFingertable_result & rhs) const
+  {
+    if (!(success == rhs.success))
+      return false;
+    if (!(systemException == rhs.systemException))
+      return false;
+    return true;
+  }
+  bool operator != (const FileStore_getFingertable_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const FileStore_getFingertable_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+  friend std::ostream& operator<<(std::ostream& out, const FileStore_getFingertable_result& obj);
+};
+
+typedef struct _FileStore_getFingertable_presult__isset {
+  _FileStore_getFingertable_presult__isset() : success(false), systemException(false) {}
+  bool success :1;
+  bool systemException :1;
+} _FileStore_getFingertable_presult__isset;
+
+class FileStore_getFingertable_presult {
+ public:
+
+  static const char* ascii_fingerprint; // = "0E2136712E8A71263F5CA200C33C7303";
+  static const uint8_t binary_fingerprint[16]; // = {0x0E,0x21,0x36,0x71,0x2E,0x8A,0x71,0x26,0x3F,0x5C,0xA2,0x00,0xC3,0x3C,0x73,0x03};
+
+
+  virtual ~FileStore_getFingertable_presult() throw();
+  std::vector<NodeID> * success;
+  SystemException systemException;
+
+  _FileStore_getFingertable_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+  friend std::ostream& operator<<(std::ostream& out, const FileStore_getFingertable_presult& obj);
+};
+
+
+class FileStore_fixFingers_args {
+ public:
+
+  static const char* ascii_fingerprint; // = "99914B932BD37A50B983C5E7C90AE93B";
+  static const uint8_t binary_fingerprint[16]; // = {0x99,0x91,0x4B,0x93,0x2B,0xD3,0x7A,0x50,0xB9,0x83,0xC5,0xE7,0xC9,0x0A,0xE9,0x3B};
+
+  FileStore_fixFingers_args(const FileStore_fixFingers_args&);
+  FileStore_fixFingers_args& operator=(const FileStore_fixFingers_args&);
+  FileStore_fixFingers_args() {
+  }
+
+  virtual ~FileStore_fixFingers_args() throw();
+
+  bool operator == (const FileStore_fixFingers_args & /* rhs */) const
+  {
+    return true;
+  }
+  bool operator != (const FileStore_fixFingers_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const FileStore_fixFingers_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+  friend std::ostream& operator<<(std::ostream& out, const FileStore_fixFingers_args& obj);
+};
+
+
+class FileStore_fixFingers_pargs {
+ public:
+
+  static const char* ascii_fingerprint; // = "99914B932BD37A50B983C5E7C90AE93B";
+  static const uint8_t binary_fingerprint[16]; // = {0x99,0x91,0x4B,0x93,0x2B,0xD3,0x7A,0x50,0xB9,0x83,0xC5,0xE7,0xC9,0x0A,0xE9,0x3B};
+
+
+  virtual ~FileStore_fixFingers_pargs() throw();
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+  friend std::ostream& operator<<(std::ostream& out, const FileStore_fixFingers_pargs& obj);
+};
+
+typedef struct _FileStore_fixFingers_result__isset {
+  _FileStore_fixFingers_result__isset() : systemException(false) {}
+  bool systemException :1;
+} _FileStore_fixFingers_result__isset;
+
+class FileStore_fixFingers_result {
+ public:
+
+  static const char* ascii_fingerprint; // = "DBAF2AD71D1470DBFC004F94C495FC06";
+  static const uint8_t binary_fingerprint[16]; // = {0xDB,0xAF,0x2A,0xD7,0x1D,0x14,0x70,0xDB,0xFC,0x00,0x4F,0x94,0xC4,0x95,0xFC,0x06};
+
+  FileStore_fixFingers_result(const FileStore_fixFingers_result&);
+  FileStore_fixFingers_result& operator=(const FileStore_fixFingers_result&);
+  FileStore_fixFingers_result() {
+  }
+
+  virtual ~FileStore_fixFingers_result() throw();
+  SystemException systemException;
+
+  _FileStore_fixFingers_result__isset __isset;
+
+  void __set_systemException(const SystemException& val);
+
+  bool operator == (const FileStore_fixFingers_result & rhs) const
+  {
+    if (!(systemException == rhs.systemException))
+      return false;
+    return true;
+  }
+  bool operator != (const FileStore_fixFingers_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const FileStore_fixFingers_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+  friend std::ostream& operator<<(std::ostream& out, const FileStore_fixFingers_result& obj);
+};
+
+typedef struct _FileStore_fixFingers_presult__isset {
+  _FileStore_fixFingers_presult__isset() : systemException(false) {}
+  bool systemException :1;
+} _FileStore_fixFingers_presult__isset;
+
+class FileStore_fixFingers_presult {
+ public:
+
+  static const char* ascii_fingerprint; // = "DBAF2AD71D1470DBFC004F94C495FC06";
+  static const uint8_t binary_fingerprint[16]; // = {0xDB,0xAF,0x2A,0xD7,0x1D,0x14,0x70,0xDB,0xFC,0x00,0x4F,0x94,0xC4,0x95,0xFC,0x06};
+
+
+  virtual ~FileStore_fixFingers_presult() throw();
+  SystemException systemException;
+
+  _FileStore_fixFingers_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+  friend std::ostream& operator<<(std::ostream& out, const FileStore_fixFingers_presult& obj);
 };
 
 typedef struct _FileStore_findSucc_args__isset {
@@ -1102,249 +1559,6 @@ class FileStore_setNodePred_presult {
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
 
   friend std::ostream& operator<<(std::ostream& out, const FileStore_setNodePred_presult& obj);
-};
-
-typedef struct _FileStore_updateFinger_args__isset {
-  _FileStore_updateFinger_args__isset() : idx(false), nodeId(false) {}
-  bool idx :1;
-  bool nodeId :1;
-} _FileStore_updateFinger_args__isset;
-
-class FileStore_updateFinger_args {
- public:
-
-  static const char* ascii_fingerprint; // = "DD015B2001600A56F6D67E6F30D9E115";
-  static const uint8_t binary_fingerprint[16]; // = {0xDD,0x01,0x5B,0x20,0x01,0x60,0x0A,0x56,0xF6,0xD6,0x7E,0x6F,0x30,0xD9,0xE1,0x15};
-
-  FileStore_updateFinger_args(const FileStore_updateFinger_args&);
-  FileStore_updateFinger_args& operator=(const FileStore_updateFinger_args&);
-  FileStore_updateFinger_args() : idx(0) {
-  }
-
-  virtual ~FileStore_updateFinger_args() throw();
-  int32_t idx;
-  NodeID nodeId;
-
-  _FileStore_updateFinger_args__isset __isset;
-
-  void __set_idx(const int32_t val);
-
-  void __set_nodeId(const NodeID& val);
-
-  bool operator == (const FileStore_updateFinger_args & rhs) const
-  {
-    if (!(idx == rhs.idx))
-      return false;
-    if (!(nodeId == rhs.nodeId))
-      return false;
-    return true;
-  }
-  bool operator != (const FileStore_updateFinger_args &rhs) const {
-    return !(*this == rhs);
-  }
-
-  bool operator < (const FileStore_updateFinger_args & ) const;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-  friend std::ostream& operator<<(std::ostream& out, const FileStore_updateFinger_args& obj);
-};
-
-
-class FileStore_updateFinger_pargs {
- public:
-
-  static const char* ascii_fingerprint; // = "DD015B2001600A56F6D67E6F30D9E115";
-  static const uint8_t binary_fingerprint[16]; // = {0xDD,0x01,0x5B,0x20,0x01,0x60,0x0A,0x56,0xF6,0xD6,0x7E,0x6F,0x30,0xD9,0xE1,0x15};
-
-
-  virtual ~FileStore_updateFinger_pargs() throw();
-  const int32_t* idx;
-  const NodeID* nodeId;
-
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-  friend std::ostream& operator<<(std::ostream& out, const FileStore_updateFinger_pargs& obj);
-};
-
-typedef struct _FileStore_updateFinger_result__isset {
-  _FileStore_updateFinger_result__isset() : systemException(false) {}
-  bool systemException :1;
-} _FileStore_updateFinger_result__isset;
-
-class FileStore_updateFinger_result {
- public:
-
-  static const char* ascii_fingerprint; // = "DBAF2AD71D1470DBFC004F94C495FC06";
-  static const uint8_t binary_fingerprint[16]; // = {0xDB,0xAF,0x2A,0xD7,0x1D,0x14,0x70,0xDB,0xFC,0x00,0x4F,0x94,0xC4,0x95,0xFC,0x06};
-
-  FileStore_updateFinger_result(const FileStore_updateFinger_result&);
-  FileStore_updateFinger_result& operator=(const FileStore_updateFinger_result&);
-  FileStore_updateFinger_result() {
-  }
-
-  virtual ~FileStore_updateFinger_result() throw();
-  SystemException systemException;
-
-  _FileStore_updateFinger_result__isset __isset;
-
-  void __set_systemException(const SystemException& val);
-
-  bool operator == (const FileStore_updateFinger_result & rhs) const
-  {
-    if (!(systemException == rhs.systemException))
-      return false;
-    return true;
-  }
-  bool operator != (const FileStore_updateFinger_result &rhs) const {
-    return !(*this == rhs);
-  }
-
-  bool operator < (const FileStore_updateFinger_result & ) const;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-  friend std::ostream& operator<<(std::ostream& out, const FileStore_updateFinger_result& obj);
-};
-
-typedef struct _FileStore_updateFinger_presult__isset {
-  _FileStore_updateFinger_presult__isset() : systemException(false) {}
-  bool systemException :1;
-} _FileStore_updateFinger_presult__isset;
-
-class FileStore_updateFinger_presult {
- public:
-
-  static const char* ascii_fingerprint; // = "DBAF2AD71D1470DBFC004F94C495FC06";
-  static const uint8_t binary_fingerprint[16]; // = {0xDB,0xAF,0x2A,0xD7,0x1D,0x14,0x70,0xDB,0xFC,0x00,0x4F,0x94,0xC4,0x95,0xFC,0x06};
-
-
-  virtual ~FileStore_updateFinger_presult() throw();
-  SystemException systemException;
-
-  _FileStore_updateFinger_presult__isset __isset;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-
-  friend std::ostream& operator<<(std::ostream& out, const FileStore_updateFinger_presult& obj);
-};
-
-
-class FileStore_getFingertable_args {
- public:
-
-  static const char* ascii_fingerprint; // = "99914B932BD37A50B983C5E7C90AE93B";
-  static const uint8_t binary_fingerprint[16]; // = {0x99,0x91,0x4B,0x93,0x2B,0xD3,0x7A,0x50,0xB9,0x83,0xC5,0xE7,0xC9,0x0A,0xE9,0x3B};
-
-  FileStore_getFingertable_args(const FileStore_getFingertable_args&);
-  FileStore_getFingertable_args& operator=(const FileStore_getFingertable_args&);
-  FileStore_getFingertable_args() {
-  }
-
-  virtual ~FileStore_getFingertable_args() throw();
-
-  bool operator == (const FileStore_getFingertable_args & /* rhs */) const
-  {
-    return true;
-  }
-  bool operator != (const FileStore_getFingertable_args &rhs) const {
-    return !(*this == rhs);
-  }
-
-  bool operator < (const FileStore_getFingertable_args & ) const;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-  friend std::ostream& operator<<(std::ostream& out, const FileStore_getFingertable_args& obj);
-};
-
-
-class FileStore_getFingertable_pargs {
- public:
-
-  static const char* ascii_fingerprint; // = "99914B932BD37A50B983C5E7C90AE93B";
-  static const uint8_t binary_fingerprint[16]; // = {0x99,0x91,0x4B,0x93,0x2B,0xD3,0x7A,0x50,0xB9,0x83,0xC5,0xE7,0xC9,0x0A,0xE9,0x3B};
-
-
-  virtual ~FileStore_getFingertable_pargs() throw();
-
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-  friend std::ostream& operator<<(std::ostream& out, const FileStore_getFingertable_pargs& obj);
-};
-
-typedef struct _FileStore_getFingertable_result__isset {
-  _FileStore_getFingertable_result__isset() : success(false), systemException(false) {}
-  bool success :1;
-  bool systemException :1;
-} _FileStore_getFingertable_result__isset;
-
-class FileStore_getFingertable_result {
- public:
-
-  static const char* ascii_fingerprint; // = "0E2136712E8A71263F5CA200C33C7303";
-  static const uint8_t binary_fingerprint[16]; // = {0x0E,0x21,0x36,0x71,0x2E,0x8A,0x71,0x26,0x3F,0x5C,0xA2,0x00,0xC3,0x3C,0x73,0x03};
-
-  FileStore_getFingertable_result(const FileStore_getFingertable_result&);
-  FileStore_getFingertable_result& operator=(const FileStore_getFingertable_result&);
-  FileStore_getFingertable_result() {
-  }
-
-  virtual ~FileStore_getFingertable_result() throw();
-  std::vector<NodeID>  success;
-  SystemException systemException;
-
-  _FileStore_getFingertable_result__isset __isset;
-
-  void __set_success(const std::vector<NodeID> & val);
-
-  void __set_systemException(const SystemException& val);
-
-  bool operator == (const FileStore_getFingertable_result & rhs) const
-  {
-    if (!(success == rhs.success))
-      return false;
-    if (!(systemException == rhs.systemException))
-      return false;
-    return true;
-  }
-  bool operator != (const FileStore_getFingertable_result &rhs) const {
-    return !(*this == rhs);
-  }
-
-  bool operator < (const FileStore_getFingertable_result & ) const;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-  friend std::ostream& operator<<(std::ostream& out, const FileStore_getFingertable_result& obj);
-};
-
-typedef struct _FileStore_getFingertable_presult__isset {
-  _FileStore_getFingertable_presult__isset() : success(false), systemException(false) {}
-  bool success :1;
-  bool systemException :1;
-} _FileStore_getFingertable_presult__isset;
-
-class FileStore_getFingertable_presult {
- public:
-
-  static const char* ascii_fingerprint; // = "0E2136712E8A71263F5CA200C33C7303";
-  static const uint8_t binary_fingerprint[16]; // = {0x0E,0x21,0x36,0x71,0x2E,0x8A,0x71,0x26,0x3F,0x5C,0xA2,0x00,0xC3,0x3C,0x73,0x03};
-
-
-  virtual ~FileStore_getFingertable_presult() throw();
-  std::vector<NodeID> * success;
-  SystemException systemException;
-
-  _FileStore_getFingertable_presult__isset __isset;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-
-  friend std::ostream& operator<<(std::ostream& out, const FileStore_getFingertable_presult& obj);
 };
 
 
@@ -2039,114 +2253,6 @@ class FileStore_notify_presult {
   friend std::ostream& operator<<(std::ostream& out, const FileStore_notify_presult& obj);
 };
 
-
-class FileStore_fixFingers_args {
- public:
-
-  static const char* ascii_fingerprint; // = "99914B932BD37A50B983C5E7C90AE93B";
-  static const uint8_t binary_fingerprint[16]; // = {0x99,0x91,0x4B,0x93,0x2B,0xD3,0x7A,0x50,0xB9,0x83,0xC5,0xE7,0xC9,0x0A,0xE9,0x3B};
-
-  FileStore_fixFingers_args(const FileStore_fixFingers_args&);
-  FileStore_fixFingers_args& operator=(const FileStore_fixFingers_args&);
-  FileStore_fixFingers_args() {
-  }
-
-  virtual ~FileStore_fixFingers_args() throw();
-
-  bool operator == (const FileStore_fixFingers_args & /* rhs */) const
-  {
-    return true;
-  }
-  bool operator != (const FileStore_fixFingers_args &rhs) const {
-    return !(*this == rhs);
-  }
-
-  bool operator < (const FileStore_fixFingers_args & ) const;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-  friend std::ostream& operator<<(std::ostream& out, const FileStore_fixFingers_args& obj);
-};
-
-
-class FileStore_fixFingers_pargs {
- public:
-
-  static const char* ascii_fingerprint; // = "99914B932BD37A50B983C5E7C90AE93B";
-  static const uint8_t binary_fingerprint[16]; // = {0x99,0x91,0x4B,0x93,0x2B,0xD3,0x7A,0x50,0xB9,0x83,0xC5,0xE7,0xC9,0x0A,0xE9,0x3B};
-
-
-  virtual ~FileStore_fixFingers_pargs() throw();
-
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-  friend std::ostream& operator<<(std::ostream& out, const FileStore_fixFingers_pargs& obj);
-};
-
-typedef struct _FileStore_fixFingers_result__isset {
-  _FileStore_fixFingers_result__isset() : systemException(false) {}
-  bool systemException :1;
-} _FileStore_fixFingers_result__isset;
-
-class FileStore_fixFingers_result {
- public:
-
-  static const char* ascii_fingerprint; // = "DBAF2AD71D1470DBFC004F94C495FC06";
-  static const uint8_t binary_fingerprint[16]; // = {0xDB,0xAF,0x2A,0xD7,0x1D,0x14,0x70,0xDB,0xFC,0x00,0x4F,0x94,0xC4,0x95,0xFC,0x06};
-
-  FileStore_fixFingers_result(const FileStore_fixFingers_result&);
-  FileStore_fixFingers_result& operator=(const FileStore_fixFingers_result&);
-  FileStore_fixFingers_result() {
-  }
-
-  virtual ~FileStore_fixFingers_result() throw();
-  SystemException systemException;
-
-  _FileStore_fixFingers_result__isset __isset;
-
-  void __set_systemException(const SystemException& val);
-
-  bool operator == (const FileStore_fixFingers_result & rhs) const
-  {
-    if (!(systemException == rhs.systemException))
-      return false;
-    return true;
-  }
-  bool operator != (const FileStore_fixFingers_result &rhs) const {
-    return !(*this == rhs);
-  }
-
-  bool operator < (const FileStore_fixFingers_result & ) const;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-  friend std::ostream& operator<<(std::ostream& out, const FileStore_fixFingers_result& obj);
-};
-
-typedef struct _FileStore_fixFingers_presult__isset {
-  _FileStore_fixFingers_presult__isset() : systemException(false) {}
-  bool systemException :1;
-} _FileStore_fixFingers_presult__isset;
-
-class FileStore_fixFingers_presult {
- public:
-
-  static const char* ascii_fingerprint; // = "DBAF2AD71D1470DBFC004F94C495FC06";
-  static const uint8_t binary_fingerprint[16]; // = {0xDB,0xAF,0x2A,0xD7,0x1D,0x14,0x70,0xDB,0xFC,0x00,0x4F,0x94,0xC4,0x95,0xFC,0x06};
-
-
-  virtual ~FileStore_fixFingers_presult() throw();
-  SystemException systemException;
-
-  _FileStore_fixFingers_presult__isset __isset;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-
-  friend std::ostream& operator<<(std::ostream& out, const FileStore_fixFingers_presult& obj);
-};
-
 class FileStoreClient : virtual public FileStoreIf {
  public:
   FileStoreClient(boost::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
@@ -2181,6 +2287,18 @@ class FileStoreClient : virtual public FileStoreIf {
   void deleteFile(const std::string& filename, const UserID& owner);
   void send_deleteFile(const std::string& filename, const UserID& owner);
   void recv_deleteFile();
+  void setFingertable(const std::vector<NodeID> & node_list);
+  void send_setFingertable(const std::vector<NodeID> & node_list);
+  void recv_setFingertable();
+  void updateFinger(const int32_t idx, const NodeID& nodeId);
+  void send_updateFinger(const int32_t idx, const NodeID& nodeId);
+  void recv_updateFinger();
+  void getFingertable(std::vector<NodeID> & _return);
+  void send_getFingertable();
+  void recv_getFingertable(std::vector<NodeID> & _return);
+  void fixFingers();
+  void send_fixFingers();
+  void recv_fixFingers();
   void findSucc(NodeID& _return, const std::string& key);
   void send_findSucc(const std::string& key);
   void recv_findSucc(NodeID& _return);
@@ -2196,12 +2314,6 @@ class FileStoreClient : virtual public FileStoreIf {
   void setNodePred(const NodeID& nodeId);
   void send_setNodePred(const NodeID& nodeId);
   void recv_setNodePred();
-  void updateFinger(const int32_t idx, const NodeID& nodeId);
-  void send_updateFinger(const int32_t idx, const NodeID& nodeId);
-  void recv_updateFinger();
-  void getFingertable(std::vector<NodeID> & _return);
-  void send_getFingertable();
-  void recv_getFingertable(std::vector<NodeID> & _return);
   void pullUnownedFiles(std::vector<RFile> & _return);
   void send_pullUnownedFiles();
   void recv_pullUnownedFiles(std::vector<RFile> & _return);
@@ -2220,9 +2332,6 @@ class FileStoreClient : virtual public FileStoreIf {
   void notify(const NodeID& nodeId);
   void send_notify(const NodeID& nodeId);
   void recv_notify();
-  void fixFingers();
-  void send_fixFingers();
-  void recv_fixFingers();
  protected:
   boost::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
   boost::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
@@ -2241,40 +2350,42 @@ class FileStoreProcessor : public ::apache::thrift::TDispatchProcessor {
   void process_writeFile(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_readFile(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_deleteFile(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_setFingertable(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_updateFinger(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_getFingertable(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_fixFingers(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_findSucc(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_findPred(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_getNodeSucc(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_getNodePred(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_setNodePred(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
-  void process_updateFinger(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
-  void process_getFingertable(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_pullUnownedFiles(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_pushUnownedFiles(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_join(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_remove(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_stabilize(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_notify(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
-  void process_fixFingers(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
  public:
   FileStoreProcessor(boost::shared_ptr<FileStoreIf> iface) :
     iface_(iface) {
     processMap_["writeFile"] = &FileStoreProcessor::process_writeFile;
     processMap_["readFile"] = &FileStoreProcessor::process_readFile;
     processMap_["deleteFile"] = &FileStoreProcessor::process_deleteFile;
+    processMap_["setFingertable"] = &FileStoreProcessor::process_setFingertable;
+    processMap_["updateFinger"] = &FileStoreProcessor::process_updateFinger;
+    processMap_["getFingertable"] = &FileStoreProcessor::process_getFingertable;
+    processMap_["fixFingers"] = &FileStoreProcessor::process_fixFingers;
     processMap_["findSucc"] = &FileStoreProcessor::process_findSucc;
     processMap_["findPred"] = &FileStoreProcessor::process_findPred;
     processMap_["getNodeSucc"] = &FileStoreProcessor::process_getNodeSucc;
     processMap_["getNodePred"] = &FileStoreProcessor::process_getNodePred;
     processMap_["setNodePred"] = &FileStoreProcessor::process_setNodePred;
-    processMap_["updateFinger"] = &FileStoreProcessor::process_updateFinger;
-    processMap_["getFingertable"] = &FileStoreProcessor::process_getFingertable;
     processMap_["pullUnownedFiles"] = &FileStoreProcessor::process_pullUnownedFiles;
     processMap_["pushUnownedFiles"] = &FileStoreProcessor::process_pushUnownedFiles;
     processMap_["join"] = &FileStoreProcessor::process_join;
     processMap_["remove"] = &FileStoreProcessor::process_remove;
     processMap_["stabilize"] = &FileStoreProcessor::process_stabilize;
     processMap_["notify"] = &FileStoreProcessor::process_notify;
-    processMap_["fixFingers"] = &FileStoreProcessor::process_fixFingers;
   }
 
   virtual ~FileStoreProcessor() {}
@@ -2331,6 +2442,43 @@ class FileStoreMultiface : virtual public FileStoreIf {
     ifaces_[i]->deleteFile(filename, owner);
   }
 
+  void setFingertable(const std::vector<NodeID> & node_list) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->setFingertable(node_list);
+    }
+    ifaces_[i]->setFingertable(node_list);
+  }
+
+  void updateFinger(const int32_t idx, const NodeID& nodeId) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->updateFinger(idx, nodeId);
+    }
+    ifaces_[i]->updateFinger(idx, nodeId);
+  }
+
+  void getFingertable(std::vector<NodeID> & _return) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->getFingertable(_return);
+    }
+    ifaces_[i]->getFingertable(_return);
+    return;
+  }
+
+  void fixFingers() {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->fixFingers();
+    }
+    ifaces_[i]->fixFingers();
+  }
+
   void findSucc(NodeID& _return, const std::string& key) {
     size_t sz = ifaces_.size();
     size_t i = 0;
@@ -2378,25 +2526,6 @@ class FileStoreMultiface : virtual public FileStoreIf {
       ifaces_[i]->setNodePred(nodeId);
     }
     ifaces_[i]->setNodePred(nodeId);
-  }
-
-  void updateFinger(const int32_t idx, const NodeID& nodeId) {
-    size_t sz = ifaces_.size();
-    size_t i = 0;
-    for (; i < (sz - 1); ++i) {
-      ifaces_[i]->updateFinger(idx, nodeId);
-    }
-    ifaces_[i]->updateFinger(idx, nodeId);
-  }
-
-  void getFingertable(std::vector<NodeID> & _return) {
-    size_t sz = ifaces_.size();
-    size_t i = 0;
-    for (; i < (sz - 1); ++i) {
-      ifaces_[i]->getFingertable(_return);
-    }
-    ifaces_[i]->getFingertable(_return);
-    return;
   }
 
   void pullUnownedFiles(std::vector<RFile> & _return) {
@@ -2452,15 +2581,6 @@ class FileStoreMultiface : virtual public FileStoreIf {
       ifaces_[i]->notify(nodeId);
     }
     ifaces_[i]->notify(nodeId);
-  }
-
-  void fixFingers() {
-    size_t sz = ifaces_.size();
-    size_t i = 0;
-    for (; i < (sz - 1); ++i) {
-      ifaces_[i]->fixFingers();
-    }
-    ifaces_[i]->fixFingers();
   }
 
 };
