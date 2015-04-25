@@ -3,12 +3,14 @@
 #include "FileStore.h"
 #include "md5.h"
 #include "fileworker.h"
-#include <ctime>
 #include <thrift/protocol/TBinaryProtocol.h>
 #include <thrift/server/TSimpleServer.h>
 #include <thrift/transport/TServerSocket.h>
 #include <thrift/transport/TBufferTransports.h>
 
+//!!!!!!!!!!!!!!!!!!!!!!!!!
+//cannot add using namespace std here.
+//Because it will lead to shared_ptr ambiguous
 using namespace ::apache::thrift;
 using namespace ::apache::thrift::protocol;
 using namespace ::apache::thrift::transport;
@@ -65,7 +67,7 @@ class FileStoreHandler : virtual public FileStoreIf {
         } else {
             _return.__set_status(Status::FAILED);
             SystemException se;
-            se.__set_message("read file failed");
+            se.__set_message("delete file failed");
             throw se;
         }
     }
