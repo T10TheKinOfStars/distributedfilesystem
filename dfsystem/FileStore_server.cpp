@@ -17,41 +17,64 @@ using namespace ::apache::thrift::server;
 using boost::shared_ptr;
 
 FileWorker fworker;
-DHTController dhtcontrolller;
 class FileStoreHandler : virtual public FileStoreIf {
+ private:
+    DHTController dhtcntler;
  public:
-  FileStoreHandler() {
+  FileStoreHandler(int port) {
     // Your initialization goes here
+    dhtcntler.setPort(port);
   }
 
   void writeFile(const RFile& rFile) {
     // Your implementation goes here
-    printf("writeFile\n");
+    fworker.writefile(rFile);
   }
 
   void readFile(RFile& _return, const std::string& filename, const UserID& owner) {
     // Your implementation goes here
-    printf("readFile\n");
+    if (fworker.getUserFileMap().find(owner) != fworker.getUserFileMap().end()) {
+        if (fworker.readfile(owner,filename,_return) == -1) {
+            SystemException se;
+            se.__set_message("read file failed");
+            throw se;
+        }
+    }
   }
 
   void deleteFile(const std::string& filename, const UserID& owner) {
     // Your implementation goes here
-    printf("deleteFile\n");
+    if (fworker.getUserFileMap().find(owner) != fworker.getUserFileMap().end())
+        fworker.deletefile(owner,filename); 
   }
 
   void setFingertable(const std::vector<NodeID> & node_list) {
     // Your implementation goes here
-    printf("setFingertable\n");
+    dprintf("setFingertable\n");
+    dhtcntler.setFingerTB(node_list); 
+    dhtcntler.setInitFlag();
   }
 
   void updateFinger(const int32_t idx, const NodeID& nodeId) {
     // Your implementation goes here
-    printf("updateFinger\n");
+    dprintf("updateFinger\n");
+    if (!dhtcntler.checkFtbInit()) {
+        SysteException se;
+        se.__set_message("finger table uninitialized\n");
+        throw se;
+    }
+    dhtcntler.updateFingertb(idx,nodeId);
   }
 
   void getFingertable(std::vector<NodeID> & _return) {
     // Your implementation goes here
-    printf("getFingertable\n");
+    dprintf("getFingertable\n");
+    if (!dhtcntler.checkFtbInit()) {
+        SysteException se;
+        se.__set_message("finger table uninitialized\n");
+        throw se;
+    }
+    _return = dhtcntler.getFingertb();
   }
 
   void fixFingers() {
@@ -61,27 +84,59 @@ class FileStoreHandler : virtual public FileStoreIf {
 
   void findSucc(NodeID& _return, const std::string& key) {
     // Your implementation goes here
-    printf("findSucc\n");
+    dprintf("findSucc\n");
+    if (!dhtcntler.checkFtbInit()) {
+        SysteException se;
+        se.__set_message("finger table uninitialized\n");
+        throw se;
+    }
+    //先找这个key的前驱x，再找x的后继
+    NodeID predecessor = dhtcntler.findPred(key);
+    _return = dhtcntler.RPCGetNodeSucc(predecessor);
   }
 
   void findPred(NodeID& _return, const std::string& key) {
     // Your implementation goes here
-    printf("findPred\n");
+    dprintf("findPred\n");
+    if (!dhtcntler.checkFtbInit()) {
+        SysteException se;
+        se.__set_message("finger table uninitialized\n");
+        throw se;
+    }
+    _return = dhtcntler.findPred(key);
   }
 
   void getNodeSucc(NodeID& _return) {
     // Your implementation goes here
-    printf("getNodeSucc\n");
+    dprintf("getNodeSucc\n");
+    if (!dhtcntler.checkFtbInit()) {
+        SysteException se;
+        se.__set_message("finger table uninitialized\n");
+        throw se;
+    }
+    _return = dhtcntler.getSucc();
   }
 
   void getNodePred(NodeID& _return) {
     // Your implementation goes here
-    printf("getNodePred\n");
+    dprintf("getNodePred\n");
+    if (!dhtcntler.checkFtbInit()) {
+        SysteException se;
+        se.__set_message("finger table uninitialized\n");
+        throw se;
+    }
+    _return = dhtcntler.getPred();
   }
 
   void setNodePred(const NodeID& nodeId) {
     // Your implementation goes here
-    printf("setNodePred\n");
+    dprintf("setNodePred\n");
+    if (!dhtcntler.checkFtbInit()) {
+        SysteException se;
+        se.__set_message("finger table uninitialized\n");
+        throw se;
+    }
+    dhtcntler.setPred(nodeId);
   }
 
   void pullUnownedFiles(std::vector<RFile> & _return) {
@@ -117,16 +172,29 @@ class FileStoreHandler : virtual public FileStoreIf {
 };
 
 int main(int argc, char **argv) {
-  int port = 9090;
-  shared_ptr<FileStoreHandler> handler(new FileStoreHandler());
+  if (argc < 2) {
+    std::cout<<"should run like ./server 9090\n";
+    exit(1);
+  }
+  int port = atoi(argv[1]);
+  const int workerCount = 4;
+
+  shared_ptr<FileStoreHandler> handler(new FileStoreHandler(port));
   shared_ptr<TProcessor> processor(new FileStoreProcessor(handler));
   shared_ptr<TServerTransport> serverTransport(new TServerSocket(port));
   shared_ptr<TTransportFactory> transportFactory(new TBufferedTransportFactory());
   shared_ptr<TProtocolFactory> protocolFactory(new TBinaryProtocolFactory());
 
-  TSimpleServer server(processor, serverTransport, transportFactory, protocolFactory);
+  boost::shared_ptr<ThreadManager> threadManager =
+    ThreadManager::newSimpleThreadManager(workerCount);
+  boost::shared_ptr<PosixThreadFactory> threadFactory =
+    boost::shared_ptr<PosixThreadFactory>(new PosixThreadFactory());
+  threadManager->threadFactory(threadFactory);
+  threadManager->start();
 
-  fworker.init();
+  TThreadServer server(processor, serverTransport, transportFactory, protocolFactory);
+
+  fworker.initFolder(port);
   server.serve();
   return 0;
 }

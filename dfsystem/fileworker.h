@@ -2,8 +2,11 @@
 #define FILEWORKER_H
 
 #include "FileStore.h"
+#include <iostream>
+#include <fstream>
 #include <ctime>
 #include <cstdlib>
+#include "sha256.h"
 #include <vector>
 #include <string>
 #include <thrift/protocol/TBinaryProtocol.h>

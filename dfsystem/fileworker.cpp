@@ -1,10 +1,10 @@
 #include "fileworker.h"
-#include "sha256.h"
-#include <fstream>
 
-void FileWorker::initFolder() {
-    std::string cmd = "rm -rf files | mkdir files";    
-    if (system(cmd.c_str()) == -1) {
+void FileWorker::initFolder(int port) {
+    char cmd[30];
+    sprintf(&cmd,"rm -rf %d | mkdir %d", port);
+    //std::string cmd = "rm -rf %d | mkdir %d";    
+    if (system(cmd) == -1) {
         SystemException se;
         se.__set_message("create folder failed");
         throw se;
