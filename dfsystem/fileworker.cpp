@@ -1,8 +1,8 @@
 #include "fileworker.h"
 
 void FileWorker::initFolder(int port) {
-    char cmd[30];
-    sprintf(&cmd,"rm -rf %d | mkdir %d", port);
+    char cmd[128];
+    snprintf(cmd,128,"rm -rf %d | mkdir %d", port,port);
     //std::string cmd = "rm -rf %d | mkdir %d";    
     if (system(cmd) == -1) {
         SystemException se;

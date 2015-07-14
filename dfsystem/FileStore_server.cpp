@@ -5,7 +5,9 @@
 #include "fileworker.h"
 #include "DHTController.h"
 #include <thrift/protocol/TBinaryProtocol.h>
-#include <thrift/server/TSimpleServer.h>
+#include <thrift/server/TThreadedServer.h>
+#include <thrift/concurrency/ThreadManager.h>
+#include <thrift/concurrency/PosixThreadFactory.h>
 #include <thrift/transport/TServerSocket.h>
 #include <thrift/transport/TBufferTransports.h>
 
@@ -13,6 +15,7 @@ using namespace ::apache::thrift;
 using namespace ::apache::thrift::protocol;
 using namespace ::apache::thrift::transport;
 using namespace ::apache::thrift::server;
+using namespace ::apache::thrift::concurrency;
 
 using boost::shared_ptr;
 
@@ -59,7 +62,7 @@ class FileStoreHandler : virtual public FileStoreIf {
     // Your implementation goes here
     dprintf("updateFinger\n");
     if (!dhtcntler.checkFtbInit()) {
-        SysteException se;
+        SystemException se;
         se.__set_message("finger table uninitialized\n");
         throw se;
     }
@@ -70,7 +73,7 @@ class FileStoreHandler : virtual public FileStoreIf {
     // Your implementation goes here
     dprintf("getFingertable\n");
     if (!dhtcntler.checkFtbInit()) {
-        SysteException se;
+        SystemException se;
         se.__set_message("finger table uninitialized\n");
         throw se;
     }
@@ -86,7 +89,7 @@ class FileStoreHandler : virtual public FileStoreIf {
     // Your implementation goes here
     dprintf("findSucc\n");
     if (!dhtcntler.checkFtbInit()) {
-        SysteException se;
+        SystemException se;
         se.__set_message("finger table uninitialized\n");
         throw se;
     }
@@ -99,7 +102,7 @@ class FileStoreHandler : virtual public FileStoreIf {
     // Your implementation goes here
     dprintf("findPred\n");
     if (!dhtcntler.checkFtbInit()) {
-        SysteException se;
+        SystemException se;
         se.__set_message("finger table uninitialized\n");
         throw se;
     }
@@ -110,7 +113,7 @@ class FileStoreHandler : virtual public FileStoreIf {
     // Your implementation goes here
     dprintf("getNodeSucc\n");
     if (!dhtcntler.checkFtbInit()) {
-        SysteException se;
+        SystemException se;
         se.__set_message("finger table uninitialized\n");
         throw se;
     }
@@ -121,7 +124,7 @@ class FileStoreHandler : virtual public FileStoreIf {
     // Your implementation goes here
     dprintf("getNodePred\n");
     if (!dhtcntler.checkFtbInit()) {
-        SysteException se;
+        SystemException se;
         se.__set_message("finger table uninitialized\n");
         throw se;
     }
@@ -132,7 +135,7 @@ class FileStoreHandler : virtual public FileStoreIf {
     // Your implementation goes here
     dprintf("setNodePred\n");
     if (!dhtcntler.checkFtbInit()) {
-        SysteException se;
+        SystemException se;
         se.__set_message("finger table uninitialized\n");
         throw se;
     }
@@ -192,7 +195,7 @@ int main(int argc, char **argv) {
   threadManager->threadFactory(threadFactory);
   threadManager->start();
 
-  TThreadServer server(processor, serverTransport, transportFactory, protocolFactory);
+  TThreadedServer server(processor, serverTransport, transportFactory, protocolFactory);
 
   fworker.initFolder(port);
   server.serve();

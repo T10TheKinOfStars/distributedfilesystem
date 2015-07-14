@@ -30,7 +30,7 @@ class FileWorker {
         int deleteFromDisk(std::string path);
     public:
         std::map<UserID, NameDataMap> getUserFileMap();
-        void initFolder();
+        void initFolder(int port);
         int writefile(const RFile &rfile);
         int deletefile(std::string id, std::string filename);
         int readfile(std::string id, std::string filename, RFile &rfile);

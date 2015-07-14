@@ -3,31 +3,43 @@
 
 #include "FileStore.h"
 #include <vector>
+#include "common.h"
+#include <transport/TSocket.h>
+#include <transport/TBufferTransports.h>
+#include <protocol/TBinaryProtocol.h>
+
+using namespace apache::thrift;
+using namespace apache::thrift::protocol;
+using namespace apache::thrift::transport;      
 
 class DHTController {
     private:
-        vector<NodeID> dht;
+        std::vector<NodeID> dht;
         std::string ip;
         int port;
         NodeID cur;
         NodeID pre;
         NodeID succ;
         bool inited;
-        boost::share_ptr<FileStoreClient> getClientConn(const std::string &ip, int port) const;
+        boost::shared_ptr<FileStoreClient> getClientConn(const std::string &ip, int port);
     public:
+        void setPort(int vport);
         DHTController();
         void setInitFlag();
         bool checkFtbInit();
         void setFingerTB(const std::vector<NodeID> &nodes);
-        NodeID findSucc(std::string);
-        NodeID findPred(std::string);
+        NodeID findPred(const std::string &key);
         NodeID getSucc();
         NodeID getPred();
+        NodeID RPCGetNodeSucc(NodeID node);
+        NodeID RPCFindPred(NodeID node, const std::string &key);
+        bool isBetween(const std::string &left, const std::string &key, const std::string &right);
+        bool isBetweenE(const std::string &left, const std::string &key, const std::string &right);
         void setPred(NodeID node);
         void updateFingertb(int idx, NodeID node);
-        vector<NodeID> getFingertb();
+        std::vector<NodeID> getFingertb();
 
-        vector<RFile> pullFiles();
+        std::vector<RFile> pullFiles();
         void pushFiles();
 
         void join(NodeID node);
@@ -35,4 +47,5 @@ class DHTController {
         void stabilize();
         void notify(NodeID node);
         void fixFingertb();
+};
 #endif
