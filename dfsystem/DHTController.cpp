@@ -35,7 +35,8 @@ bool DHTController::checkFtbInit() {
 
 void DHTController::setFingerTB(const std::vector<NodeID> &nodes) {
     dht = nodes;
-    pre = nodes[0];
+    succ = nodes[0];
+    dprintf("The Succ for %s:%d is %s:%d",cur.ip.c_str(),cur.port,succ.ip.c_str(),succ.port);
 }
 
 NodeID DHTController::findPred(const std::string &key) {
@@ -110,7 +111,8 @@ std::vector<NodeID> DHTController::getFingertb() {
 }
 
 std::vector<RFile> DHTController::pullFiles() {
-
+    std::vector<RFile> ret;
+    return ret;
 }
 
 void DHTController::pushFiles() {
@@ -144,6 +146,7 @@ bool DHTController::isBetween(const std::string &left, const std::string &key, c
         return (left < key && key > right) ||
                (left > key && key < right);
     }
+    return true;
 }
 
 bool DHTController::isBetweenE(const std::string &left, const std::string &key, const std::string &right) {
