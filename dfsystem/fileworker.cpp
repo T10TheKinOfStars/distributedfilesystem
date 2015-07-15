@@ -45,16 +45,17 @@ int FileWorker::deleteFromDisk(std::string path) {
     return system(cmd.c_str());
 }
 
-int FileWorker::writefile(const RFile &_rfile) {
+int FileWorker::writefile(const RFile &_rfile, int port) {
     RFile rfile = _rfile;
     RFileMetadata rdata = rfile.meta;
     UserID id = rdata.owner;
     std::string filename = rdata.filename;
-    std::string path = "./files/" + id + "_" + filename;
+    std::string path = std::to_string(port) + "/" + id + "_" + filename;
+    std::cout<<path<<std::endl;
     SystemException exception;
     
     if (UserFileMap.find(id) == UserFileMap.end()) {
-        std::cout<<"this user doesn't exist"<<std::endl;
+        //std::cout<<"this user doesn't exist"<<std::endl;
         //create a new entry                
         if (write2Disk(path,rfile.content) != -1) {
             rdata.__set_version(0);            
@@ -72,7 +73,7 @@ int FileWorker::writefile(const RFile &_rfile) {
         //std::cout<<"this user exists"<<std::endl;
         NameDataMap files = UserFileMap[id];
         if (files.find(filename) == files.end() || files[filename].deleted != 0) {
-            std::cout<<"this file not exists, we need create a new one"<<std::endl;
+            //std::cout<<"this file not exists, we need create a new one"<<std::endl;
             if (write2Disk(path,rfile.content) != -1) {
                 rdata.__set_version(0);
                 rdata.__set_contentHash(sha256_calc_hex(rfile.content));
@@ -84,7 +85,7 @@ int FileWorker::writefile(const RFile &_rfile) {
                 return -1;
             }
         } else {
-            std::cout<<"this file exists, we need do update"<<std::endl;
+            //std::cout<<"this file exists, we need do update"<<std::endl;
             NameDataMap &files = UserFileMap[id];
             if (write2Disk(path,rfile.content) != -1) {                
                 ++files[filename].version;
@@ -99,8 +100,8 @@ int FileWorker::writefile(const RFile &_rfile) {
     return 0;
 }
 
-int FileWorker::deletefile(std::string id, std::string filename) {
-    std::string path = "./files/" + id + "_" + filename;    
+int FileWorker::deletefile(int port, std::string id, std::string filename) {
+    std::string path = std::to_string(port) + "/" + id + "_" + filename;    
     if (deleteFromDisk(path) != -1) {
         NameDataMap &files = UserFileMap[id];
         files[filename].__set_deleted((Timestamp)time(NULL) * 1000);
@@ -111,8 +112,8 @@ int FileWorker::deletefile(std::string id, std::string filename) {
     return 0;    
 }
 
-int FileWorker::readfile(std::string id, std::string filename, RFile &rfile) {
-    std::string path = "./files/" + id + "_" + filename;
+int FileWorker::readfile(int port, std::string id, std::string filename, RFile &rfile) {
+    std::string path = std::to_string(port) + "/" + id + "_" + filename;
     NameDataMap files = UserFileMap[id];
     RFileMetadata data = files[filename];
     if (data.deleted != 0)

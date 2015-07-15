@@ -31,9 +31,9 @@ class FileWorker {
     public:
         std::map<UserID, NameDataMap> getUserFileMap();
         void initFolder(int port);
-        int writefile(const RFile &rfile);
-        int deletefile(std::string id, std::string filename);
-        int readfile(std::string id, std::string filename, RFile &rfile);
+        int writefile(const RFile &rfile, int port);
+        int deletefile(int port, std::string id, std::string filename);
+        int readfile(int port, std::string id, std::string filename, RFile &rfile);
         int getfiles(std::string id, std::vector<RFileMetadata> &datas);
 };
 #endif

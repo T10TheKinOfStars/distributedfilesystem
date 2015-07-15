@@ -13,7 +13,7 @@ LIBS = -lthrift
 INCLUDE_PATH = -I $(THRIFT_PATH)/include/ -I $(THRIFT_PATH)/include/thrift/
 LIB_PATH = -L$(THRIFT_PATH)/lib/
 
-OBJS=FileStore.o chord_types.o chord_constants.o fileworker.o sha256.o DHTController.o
+OBJS=FileStore.o chord_types.o chord_constants.o fileworker.o sha256.o DHTController.o network.o
 OBJSERVER=FileStore_server.o
 OBJCLIENT=FileStore_client.o
 

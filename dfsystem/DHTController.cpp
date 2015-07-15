@@ -1,7 +1,13 @@
 #include "DHTController.h"
 
-void DHTController::setPort(int vport) {
-    port = vport;
+void DHTController::setCur(const std::string &ip, int port) {
+    cur.ip = ip;
+    cur.port = port;
+    cur.id = sha256_ip_port_hex(ip,port);
+}
+
+NodeID DHTController::getCur() {
+    return cur;
 }
 
 boost::shared_ptr<FileStoreClient> DHTController::getClientConn(const std::string &ip,int port) {
@@ -35,12 +41,15 @@ bool DHTController::checkFtbInit() {
 
 void DHTController::setFingerTB(const std::vector<NodeID> &nodes) {
     dht = nodes;
-    succ = nodes[0];
-    dprintf("The Succ for %s:%d is %s:%d",cur.ip.c_str(),cur.port,succ.ip.c_str(),succ.port);
+    succ = dht[0];
+    dprintf("The Succ for %s:%d is %s:%d\n",cur.ip.c_str(),cur.port,succ.ip.c_str(),succ.port);
+    for (auto x : dht) 
+        std::cout<<x.id<<" ["<<x.ip<<":"<<x.port<<"]\n";
+    std::cout<<"=========================================================="<<std::endl;
 }
 
 NodeID DHTController::findPred(const std::string &key) {
-    NodeID ret;
+    dprintf("In findPred. The key is %s\n",key.c_str());
     if (isBetweenE(cur.id,key,succ.id))
         return cur;
     //the for loop is closest_preceding_finger func
@@ -48,18 +57,18 @@ NodeID DHTController::findPred(const std::string &key) {
         if (dht[i].id.empty())
             continue;
         if (isBetween(cur.id,dht[i].id,key))
-            ret = RPCFindPred(dht[i],key);
+            return RPCFindPred(dht[i],key);
     }
-
-    return ret;
+    //wont reach here
+    return cur;
 }
 
 NodeID DHTController::RPCGetNodeSucc(NodeID node) {
     if (node.id == cur.id)
-        return cur;
+        return succ;
     std::mutex xlock;
     AutoLock autolock(xlock);
-    boost::shared_ptr<FileStoreClient> client = getClientConn(node.ip,node.port);
+    boost::shared_ptr<FileStoreClient> client(getClientConn(node.ip,node.port));
     if (client.get() == NULL) {
         SystemException se;
         char message[128];
@@ -76,7 +85,8 @@ NodeID DHTController::RPCGetNodeSucc(NodeID node) {
 NodeID DHTController::RPCFindPred(NodeID node, const std::string &key) {
     std::mutex xlock;
     AutoLock autolock(xlock);
-    boost::shared_ptr<FileStoreClient> client = getClientConn(node.ip,node.port);
+    dprintf("RPCFINDPRED node: %s:%d\n",node.ip.c_str(),node.port);
+    boost::shared_ptr<FileStoreClient> client(getClientConn(node.ip,node.port));
     
     if (client.get() == NULL) {
         SystemException se;
@@ -141,17 +151,19 @@ void DHTController::fixFingertb() {
 
 bool DHTController::isBetween(const std::string &left, const std::string &key, const std::string &right) {
     if (left < right) {
-        return left < key && key < right;
+        return (left < key && key < right);
     } else if (left > right) {
-        return (left < key && key > right) ||
-               (left > key && key < right);
-    }
+        return ((left < key && key > right) ||
+               (left > key && key < right));
+    } 
     return true;
 }
 
 bool DHTController::isBetweenE(const std::string &left, const std::string &key, const std::string &right) {
     if (key == right)
         return true;
+    else if (key == left)
+        return false;
     else
         return isBetween(left,key,right);
 }

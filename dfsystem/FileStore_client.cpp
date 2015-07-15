@@ -1,7 +1,9 @@
 #include <iostream>
 #include "FileStore.h"
 #include <unistd.h>
+#include "sha256.h"
 #include <getopt.h>
+#include "common.h"
 #include <vector>
 #include <fstream>
 #include <cstdlib>
@@ -31,11 +33,9 @@ int main(int argc, char** argv) {
     boost::shared_ptr<TProtocol> protocol(new TBinaryProtocol(transport)); 
     boost::shared_ptr<TMemoryBuffer> buffer(new TMemoryBuffer());
     TJSONProtocol jsonprotocol(buffer);
-
-    FileStoreClient client(protocol);
+    NodeID relatednode;
+    FileStoreClient client1(protocol);
     try {
-        transport->open();
-
         static struct option long_options[] = {
             {"operation" , required_argument, 0, 'o'},
             {"filename", required_argument, 0, 'f'},
@@ -60,9 +60,28 @@ int main(int argc, char** argv) {
             }
         }
 
+        //first RPC to find the node that file belongs to 
+        transport->open();
+        try {
+            std::string key = sha256_filename_owner_hex(user,filename);
+            std::cout<<key<<std::endl;
+            client1.findSucc(relatednode,key);
+            dprintf("related node is %s:%d\n", relatednode.ip.c_str(), relatednode.port);
+        } catch (SystemException se) {
+            std::cout<<ThriftJSONString(se)<<std::endl;
+            return -1;
+        }
+        transport->close();
+        boost::shared_ptr<TSocket> socket(new TSocket(relatednode.ip, relatednode.port));
+        boost::shared_ptr<TTransport> transport(new TBufferedTransport(socket));
+        boost::shared_ptr<TProtocol> protocol(new TBinaryProtocol(transport)); 
+        FileStoreClient client2(protocol);
+        //second RPC
+        transport->open();
+
         if (operation == "read") {
             try {
-                client.readFile(rfile,filename,user);
+                client2.readFile(rfile,filename,user);
             } catch (SystemException se) {
                 //format se in json format
                 std::cout<<ThriftJSONString(se)<<std::endl;
@@ -95,7 +114,7 @@ int main(int argc, char** argv) {
                 return -1;
             }
             try {
-                client.writeFile(rfile);
+                client2.writeFile(rfile);
             } catch (SystemException se) {
                 //format se information in json format
                 std::cout<<ThriftJSONString(se)<<std::endl;
@@ -105,7 +124,7 @@ int main(int argc, char** argv) {
             //std::cout<<ThriftJSONString(status)<<std::endl;
         } else if (operation == "delete") {
             try {
-                client.deleteFile( filename, user);
+                client2.deleteFile( filename, user);
             } catch (SystemException se) {
                 //format se information in json format
                 std::cout<<ThriftJSONString(se)<<std::endl;
@@ -113,24 +132,7 @@ int main(int argc, char** argv) {
             }
             //format status in json format
             //std::cout<<ThriftJSONString(status)<<std::endl;
-        } /*else if (operation == "list") {
-            std::vector<RFileMetadata> datas;
-            try {
-                client.listOwnedFiles(datas,user);
-            } catch (SystemException se) {
-                //format se information in json format
-                std::cout<<ThriftJSONString(se)<<std::endl;
-                return -1;
-            }
-            //format datas in json format
-            jsonprotocol.writeListBegin(::apache::thrift::protocol::T_STRUCT, datas.size());
-            for(int i = 0; i < (signed)datas.size(); i++) {
-                datas[i].write(&jsonprotocol);
-            }
-            jsonprotocol.writeListEnd();
-
-            std::cout << buffer->getBufferAsString()<< std::endl;
-        }*/ else {
+        } else {
             std::cerr<<"operation argument error"<<std::endl;
             return 0;
         }

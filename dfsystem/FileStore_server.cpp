@@ -4,6 +4,7 @@
 #include "FileStore.h"
 #include "fileworker.h"
 #include "DHTController.h"
+#include "network.h"
 #include <thrift/protocol/TBinaryProtocol.h>
 #include <thrift/server/TThreadedServer.h>
 #include <thrift/concurrency/ThreadManager.h>
@@ -24,20 +25,20 @@ class FileStoreHandler : virtual public FileStoreIf {
  private:
     DHTController dhtcntler;
  public:
-  FileStoreHandler(int port) {
+  FileStoreHandler(std::string ip, int port) {
     // Your initialization goes here
-    dhtcntler.setPort(port);
+    dhtcntler.setCur(ip, port);
   }
 
   void writeFile(const RFile& rFile) {
     // Your implementation goes here
-    fworker.writefile(rFile);
+    fworker.writefile(rFile, dhtcntler.getCur().port);
   }
 
   void readFile(RFile& _return, const std::string& filename, const UserID& owner) {
     // Your implementation goes here
     if (fworker.getUserFileMap().find(owner) != fworker.getUserFileMap().end()) {
-        if (fworker.readfile(owner,filename,_return) == -1) {
+        if (fworker.readfile(dhtcntler.getCur().port, owner,filename,_return) == -1) {
             SystemException se;
             se.__set_message("read file failed");
             throw se;
@@ -48,7 +49,7 @@ class FileStoreHandler : virtual public FileStoreIf {
   void deleteFile(const std::string& filename, const UserID& owner) {
     // Your implementation goes here
     if (fworker.getUserFileMap().find(owner) != fworker.getUserFileMap().end())
-        fworker.deletefile(owner,filename); 
+        fworker.deletefile(dhtcntler.getCur().port, owner,filename); 
   }
 
   void setFingertable(const std::vector<NodeID> & node_list) {
@@ -87,20 +88,25 @@ class FileStoreHandler : virtual public FileStoreIf {
 
   void findSucc(NodeID& _return, const std::string& key) {
     // Your implementation goes here
-    dprintf("findSucc\n");
+    //dprintf("findSucc\n");
     if (!dhtcntler.checkFtbInit()) {
         SystemException se;
         se.__set_message("finger table uninitialized\n");
         throw se;
     }
-    //先找这个key的前驱x，再找x的后继
-    NodeID predecessor = dhtcntler.findPred(key);
-    _return = dhtcntler.RPCGetNodeSucc(predecessor);
+    if (key == dhtcntler.getCur().id) { 
+        _return = dhtcntler.getCur();
+    } else {
+        //先找这个key的前驱x，再找x的后继
+        NodeID pre = dhtcntler.findPred(key);
+        dprintf("The pre for %s is %s:%d\n",key.c_str(),pre.ip.c_str(),pre.port);
+        _return = dhtcntler.RPCGetNodeSucc(pre);
+    }
   }
 
   void findPred(NodeID& _return, const std::string& key) {
     // Your implementation goes here
-    dprintf("findPred\n");
+    //dprintf("findPred\n");
     if (!dhtcntler.checkFtbInit()) {
         SystemException se;
         se.__set_message("finger table uninitialized\n");
@@ -117,6 +123,7 @@ class FileStoreHandler : virtual public FileStoreIf {
         se.__set_message("finger table uninitialized\n");
         throw se;
     }
+    dprintf("The cur node is %s:%d\n",dhtcntler.getCur().ip.c_str(),dhtcntler.getCur().port);
     _return = dhtcntler.getSucc();
   }
 
@@ -179,10 +186,11 @@ int main(int argc, char **argv) {
     std::cout<<"should run like ./server 9090\n";
     exit(1);
   }
+  std::string ip = get_local_ip();
   int port = atoi(argv[1]);
   const int workerCount = 4;
 
-  shared_ptr<FileStoreHandler> handler(new FileStoreHandler(port));
+  shared_ptr<FileStoreHandler> handler(new FileStoreHandler(ip,port));
   shared_ptr<TProcessor> processor(new FileStoreProcessor(handler));
   shared_ptr<TServerTransport> serverTransport(new TServerSocket(port));
   shared_ptr<TTransportFactory> transportFactory(new TBufferedTransportFactory());

@@ -2,8 +2,10 @@
 #define DHTCONTROLLER_H
 
 #include "FileStore.h"
+#include <iostream>
 #include <vector>
 #include "common.h"
+#include "sha256.h"
 #include <transport/TSocket.h>
 #include <transport/TBufferTransports.h>
 #include <protocol/TBinaryProtocol.h>
@@ -15,15 +17,14 @@ using namespace apache::thrift::transport;
 class DHTController {
     private:
         std::vector<NodeID> dht;
-        std::string ip;
-        int port;
-        NodeID cur;
         NodeID pre;
+        NodeID cur;
         NodeID succ;
         bool inited;
         boost::shared_ptr<FileStoreClient> getClientConn(const std::string &ip, int port);
     public:
-        void setPort(int vport);
+        void setCur(const std::string &ip, int port);
+        NodeID getCur();
         DHTController();
         void setInitFlag();
         bool checkFtbInit();
