@@ -48,5 +48,10 @@ class DHTController {
         void stabilize();
         void notify(NodeID node);
         void fixFingertb();
+private:
+        std::string addID(const std::string& id, int exp);
+        std::string minusID(const std::string& id, int exp);
+        std::string stradd(const std::string& str1, const std::string& str2);
+        std::string strsub(const std::string& str1, const std::string& str2);
 };
 #endif

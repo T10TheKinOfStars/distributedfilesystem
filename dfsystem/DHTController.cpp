@@ -133,7 +133,6 @@ void DHTController::pushFiles() {
 }
 
 void DHTController::join(const NodeID& node) {
-
     
 }
 
@@ -183,7 +182,8 @@ void DHTController::update_others() {
         }
     }
     //remote set pred
-    //....
+    boost::shared_ptr<FileStoreClient> client(succ.id,succ.port);
+    client->setNodePred(cur);
 }
 
 void DHTController::remove() {
@@ -222,9 +222,39 @@ bool DHTController::isBetweenE(const std::string &left, const std::string &key, 
 }
 
 std::string DHTController::addID(const std::string& id, int exp) {
-    
+//十六进制加减        
+    double addend = pow(2,exp);
+    std:string addendstr = sha256_calc_hex(std::to_string(addend));
+    return stradd(id,addendstr);    
 }
 
 std::string DHTController::minusID(const std::string& id, int exp) {
+    double subend = pow(2,exp);
+    
+    return strsub(id,sha256_calc_hex(std::to_string(pow(2,exp))));
+}
+
+#define DECTOHEX(x) ((x) >= 10?(a)-10+'a':(a)+'0')
+#define HEXTODEC(x) ((a) >= 'a'?(a)-'a'+10:(a)-'0')
+
+std::string DHTController::stradd(const std::string& str1, const std::string& str2) {
+    int carry = 0;
+    std::string result(64,'');
+
+    for (int i = 63; i >=0; --i) {
+        int x = HEXTODEC(str1[i]);
+        int y = HEXTODEC(str2[j]);
+        int z = x + y + carry; 
+        if (z >= 16)
+            carry = 1;
+        else
+            carry = 0;
+        result[i] = DECTOHEX(z >= 16 ? z-16 : z);
+    }
+
+    return result;
+}
+
+std::string DHTController::strsub(const str::string& str1, const std::string& str2) {
 
 }
