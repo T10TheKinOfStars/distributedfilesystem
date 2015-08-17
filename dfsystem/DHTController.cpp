@@ -113,7 +113,8 @@ void DHTController::setPred(NodeID node) {
 }
 
 void DHTController::updateFingertb(int idx, NodeID node) {
-
+    dht[idx] = node;
+    succ = dht[0];
 }
 
 std::vector<NodeID> DHTController::getFingertb() {
@@ -122,6 +123,8 @@ std::vector<NodeID> DHTController::getFingertb() {
 
 std::vector<RFile> DHTController::pullFiles() {
     std::vector<RFile> ret;
+    //....
+
     return ret;
 }
 
@@ -129,8 +132,58 @@ void DHTController::pushFiles() {
 
 }
 
-void DHTController::join(NodeID node) {
+void DHTController::join(const NodeID& node) {
 
+    
+}
+
+void DHTController::init_ftb(const NodeID& node) {
+    boost::shared_ptr<FileStoreClient> client(getClientConn(node.ip,node.port));
+    if (client.get() == NULL) {
+        SystemException se;
+        char message[128];
+        snprintf(message,128,"connect to %s:%d failed\n",node.ip.c_str(), node.port);
+        se.__set_message(message);
+        throw se;
+    }
+    
+    for (int i = 0; i < 256; ++i) {
+        std::string succid = addID(cur.id,i);
+        if (i > 0 && isBetween(cur.id, succid, dht[i-1].id)) {
+        //如果dht[i]的id在dht[i-1].id和node的id之间，说明dht[i]的后继和dht[i-1]是一样的
+            dht[i] = dht[i-1];
+        } else {
+            NodeID succ;
+            client->findSucc(succ,succid);
+            if (isBetween(succid, cur.id, succ.id))
+                //如果当前节点（实际存在于网络中的）在succid和node的后继之间的话，那么succid的后继节点应该是当前节点。故更新之
+                succ = cur;
+            dht[i] = succ;
+        }
+    }
+
+    succ = dht[0];
+    pred = RPCFindPred(node,cur.id);
+}
+
+void DHTController::update_others() {
+    for (int i = 0; i < 256; ++i) {
+        NodeID pred;
+        std::vector<NodeID> remotedht;
+        pred = findPred(minusID(cur.id,i));
+        boost::shared_ptr<FileStoreClient> client(pred.id,pred.port);
+        while (pred.id != cur.id) {
+            client->getFingertable(remotedht);
+            if (isBetween(pred.id,cur.id,remotedht[i])
+                client->updateFingertb(i, cur);
+            else
+                break;
+            client = boost::shared_ptr<FileStoreClient>();
+            pred = findPred(pred.id);
+        }
+    }
+    //remote set pred
+    //....
 }
 
 void DHTController::remove() {
@@ -166,4 +219,12 @@ bool DHTController::isBetweenE(const std::string &left, const std::string &key, 
         return false;
     else
         return isBetween(left,key,right);
+}
+
+std::string DHTController::addID(const std::string& id, int exp) {
+    
+}
+
+std::string DHTController::minusID(const std::string& id, int exp) {
+
 }
