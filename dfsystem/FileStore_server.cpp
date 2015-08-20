@@ -151,32 +151,88 @@ class FileStoreHandler : virtual public FileStoreIf {
 
   void pullUnownedFiles(std::vector<RFile> & _return) {
     // Your implementation goes here
-    printf("pullUnownedFiles\n");
+    dprintf("pullUnownedFiles\n");
+    std::vector<RFileMetadata> metadatas;
+    fworker.getAllFiles(metadatas);
+    NodeID cur = dhtcntler.getCur(); 
+    for (int i = 0; i < (int)metadatas.size(); ++i) {
+        RFile tmp;
+        int ret = fworker.readfile(cur.port, metadatas[i].owner, metadatas[i].filename, tmp);
+        if (ret == -1)
+            dprintf("readfile failed in pull\n");
+        else
+            _return.push_back(tmp);
+    }
   }
 
   void pushUnownedFiles(const std::vector<RFile> & files) {
     // Your implementation goes here
-    printf("pushUnownedFiles\n");
+    dprintf("pushUnownedFiles\n");
+    NodeID cur = dhtcntler.getCur(); 
+    for (auto rfile : files) {
+        int ret = fworker.writefile(rfile,cur.port);
+        if (ret < 0) {
+            SystemException se;
+            se.__set_message("writefile failed in push\n");
+            throw se;
+        }
+    }
   }
 
   void join(const NodeID& nodeId) {
     // Your implementation goes here
-    printf("join\n");
+    dprintf("join\n");
+    std::vector<RFile> migratefiles;
+    dhtcntler.join(nodeId);
+    NodeID succ = dhtcntler.getSucc();
+    boost::shared_ptr<FileStoreClient> client(dhtcntler.getClientConn(succ.ip, succ.port));
+    client->pullUnownedFiles(migratefiles); 
+    pushUnownedFiles(migratefiles);
   }
 
   void remove() {
     // Your implementation goes here
-    printf("remove\n");
+    dprintf("remove\n");
+    std::vector<RFile> migratefiles;
+
+    NodeID succ = dhtcntler.getSucc();
+    NodeID curr = dhtcntler.getCur();
+    if (succ == curr) {
+        //only one node in network
+        //so if we remove it, all files should be deleted
+        fworker.removefiles(curr.port);
+        return;
+    }
+
+    std::vector<RFileMetadata> files;
+    if (fworker.getAllFiles(files) > 0) {
+        for (int i = 0; i < (int)files.size(); ++i) {
+            RFile tmp;
+            int ret = fworker.readfile(curr.port, files[i].owner, files[i].filename, tmp);
+            if (ret == -1) {
+                dprintf("readfile failed %d %s %s\n", curr.port, files[i].owner.c_str(), files[i].filename.c_str());
+            } else {
+                migratefiles.push_back(tmp);
+            }
+        }
+    } else {
+        //if less or equal than 0, means no files in network, no more action
+        return;
+    }
+
+    boost::shared_ptr<FileStoreClient> client(dhtcntler.getClientConn(succ.ip, succ.port));
+    client->pushUnownedFiles(migratefiles);
+    fworker.removefiles(curr.port);
   }
 
   void stabilize() {
     // Your implementation goes here
-    printf("stabilize\n");
+    dprintf("stabilize\n");
   }
 
   void notify(const NodeID& nodeId) {
     // Your implementation goes here
-    printf("notify\n");
+    dprintf("notify\n");
   }
 
 };

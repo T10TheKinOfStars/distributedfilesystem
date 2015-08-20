@@ -11,6 +11,16 @@ void FileWorker::initFolder(int port) {
     }
 }
 
+void FileWorker::removefiles(int dname) {
+    char cmd[128];
+    snprintf(cmd,128,"rm -rf %d", dname);
+    if (system(cmd) == -1) {
+        SystemException se;
+        se.__set_message("remove directory failed");
+        throw se;
+    }
+}
+
 int FileWorker::readFromDisk(std::string path, int fsize, std::string &content) {
     std::ifstream ifs(path.c_str(), std::ios::binary);
     if (ifs) {   
@@ -138,7 +148,19 @@ int FileWorker::getfiles(std::string id, std::vector<RFileMetadata> &datas) {
         }
     }
 
-    return 0;
+    return datas.size();
+}
+
+int FileWorker::getAllFiles(std::vector<RFileMetadata> &files) {
+    for (auto it = UserFileMap.begin(); it != UserFileMap.end(); ++it) {
+        for (auto it1 = it->second.begin(); it1 != it->second.end(); ++it1) {
+            if (it1->second.deleted == 0) {
+                files.push_back(it1->second);
+            }
+        }
+    }
+
+    return files.size();
 }
 
 std::map<UserID, NameDataMap> FileWorker::getUserFileMap() {

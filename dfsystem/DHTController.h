@@ -21,8 +21,8 @@ class DHTController {
         NodeID cur;
         NodeID succ;
         bool inited;
-        boost::shared_ptr<FileStoreClient> getClientConn(const std::string &ip, int port);
     public:
+        boost::shared_ptr<FileStoreClient> getClientConn(const std::string &ip, int port);
         void setCur(const std::string &ip, int port);
         NodeID getCur();
         DHTController();
@@ -40,18 +40,17 @@ class DHTController {
         void updateFingertb(int idx, NodeID node);
         std::vector<NodeID> getFingertb();
 
-        std::vector<RFile> pullFiles();
-        void pushFiles();
-
-        void join(NodeID node);
+        void join(const NodeID &node);
+        void init_ftb(const NodeID& node);
+        void update_others();
         void remove();
         void stabilize();
         void notify(NodeID node);
         void fixFingertb();
-private:
+    private:
         std::string addID(const std::string& id, int exp);
         std::string minusID(const std::string& id, int exp);
         std::string stradd(const std::string& str1, const std::string& str2);
-        std::string strsub(const std::string& str1, const std::string& str2);
+        std::string strsub(std::string str1, const std::string& str2);
 };
 #endif

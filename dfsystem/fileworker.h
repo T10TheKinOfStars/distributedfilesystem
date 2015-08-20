@@ -35,5 +35,7 @@ class FileWorker {
         int deletefile(int port, std::string id, std::string filename);
         int readfile(int port, std::string id, std::string filename, RFile &rfile);
         int getfiles(std::string id, std::vector<RFileMetadata> &datas);
+        void removefiles(int dname);
+        int getAllFiles(std::vector<RFileMetadata> &files);
 };
 #endif

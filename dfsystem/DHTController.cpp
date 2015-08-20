@@ -121,19 +121,17 @@ std::vector<NodeID> DHTController::getFingertb() {
     return dht;
 }
 
-std::vector<RFile> DHTController::pullFiles() {
-    std::vector<RFile> ret;
-    //....
-
-    return ret;
-}
-
-void DHTController::pushFiles() {
-
-}
-
 void DHTController::join(const NodeID& node) {
-    
+    try {
+        if (node != cur) {
+            init_ftb(node);
+            update_others();
+        }
+    } catch(...) {
+        SystemException se;
+        se.__set_message("join failed.\n");
+        throw se;
+    }
 }
 
 void DHTController::init_ftb(const NodeID& node) {
@@ -162,7 +160,7 @@ void DHTController::init_ftb(const NodeID& node) {
     }
 
     succ = dht[0];
-    pred = RPCFindPred(node,cur.id);
+    pre = RPCFindPred(node,cur.id);
 }
 
 void DHTController::update_others() {
@@ -170,11 +168,11 @@ void DHTController::update_others() {
         NodeID pred;
         std::vector<NodeID> remotedht;
         pred = findPred(minusID(cur.id,i));
-        boost::shared_ptr<FileStoreClient> client(pred.id,pred.port);
+        boost::shared_ptr<FileStoreClient> client(getClientConn(pred.id,pred.port));
         while (pred.id != cur.id) {
             client->getFingertable(remotedht);
-            if (isBetween(pred.id,cur.id,remotedht[i])
-                client->updateFingertb(i, cur);
+            if (isBetween(pred.id,cur.id,remotedht[i].id))
+                client->updateFinger(i, cur);
             else
                 break;
             client = boost::shared_ptr<FileStoreClient>();
@@ -182,12 +180,43 @@ void DHTController::update_others() {
         }
     }
     //remote set pred
-    boost::shared_ptr<FileStoreClient> client(succ.id,succ.port);
+    boost::shared_ptr<FileStoreClient> client(getClientConn(succ.id,succ.port));
     client->setNodePred(cur);
 }
 
 void DHTController::remove() {
+    if (cur == succ)
+        //only one node in the network
+        return;
+    boost::shared_ptr<FileStoreClient> client(getClientConn(succ.id,succ.port));
+    client->setNodePred(pre);
+    //reset client
+    client = boost::shared_ptr<FileStoreClient>();
+    for (int i = 0; i < 256; ++i) {
+        std::string id = minusID(cur.id,i);
+        NodeID pred = findPred(id);
 
+        while (pred.id != cur.id) {
+            //this node need fix
+            std::vector<NodeID> remotedht;
+
+            client = getClientConn(pre.id,pre.port);
+            client->getFingertable(remotedht);
+            if (remotedht[i].id == cur.id) {
+                client->updateFinger(i,succ);
+            } else {
+                client = boost::shared_ptr<FileStoreClient>();
+                break;
+            }
+            client = boost::shared_ptr<FileStoreClient>();
+            pred = findPred(pred.id);
+        }
+    }
+    //reset curruent node
+    for (int i = 0; i < 256; ++i)
+        dht[i] = cur;
+    pre = cur;
+    succ = cur;
 }
 
 void DHTController::stabilize() {
@@ -222,28 +251,28 @@ bool DHTController::isBetweenE(const std::string &left, const std::string &key, 
 }
 
 std::string DHTController::addID(const std::string& id, int exp) {
-//十六进制加减        
+//十六进制加    
     double addend = pow(2,exp);
-    std:string addendstr = sha256_calc_hex(std::to_string(addend));
+    std::string addendstr = sha256_calc_hex(std::to_string(addend));
     return stradd(id,addendstr);    
 }
 
 std::string DHTController::minusID(const std::string& id, int exp) {
-    double subend = pow(2,exp);
-    
+//十六进制减    
     return strsub(id,sha256_calc_hex(std::to_string(pow(2,exp))));
 }
 
-#define DECTOHEX(x) ((x) >= 10?(a)-10+'a':(a)+'0')
-#define HEXTODEC(x) ((a) >= 'a'?(a)-'a'+10:(a)-'0')
+#define DECTOHEX(x) ((x) >= 10?(x)-10+'a':(x)+'0')
+#define HEXTODEC(x) ((x) >= 'a'?(x)-'a'+10:(x)-'0')
 
 std::string DHTController::stradd(const std::string& str1, const std::string& str2) {
     int carry = 0;
-    std::string result(64,'');
+    std::string result;
+    result.reserve(64);
 
     for (int i = 63; i >=0; --i) {
         int x = HEXTODEC(str1[i]);
-        int y = HEXTODEC(str2[j]);
+        int y = HEXTODEC(str2[i]);
         int z = x + y + carry; 
         if (z >= 16)
             carry = 1;
@@ -255,6 +284,27 @@ std::string DHTController::stradd(const std::string& str1, const std::string& st
     return result;
 }
 
-std::string DHTController::strsub(const str::string& str1, const std::string& str2) {
+std::string DHTController::strsub(std::string str1, const std::string& str2) {
+    int borrow = 0;
+    bool flag = false;
+    std::string result;
+    result.reserve(64);
 
+    for (int i = 63; i >= 0; --i) {
+        int x = HEXTODEC(str1[i]);
+        int y = HEXTODEC(str2[i]);
+        borrow = x < y || flag ? 1 : 0;
+        if (borrow == 1) {
+            str1[i-1] = (int)str1[i] - 1;
+        }
+        result[i] = DECTOHEX(x + borrow - y);
+        if (str1[i-1] < '0') {
+            str1[i-1] = '0';
+            flag = true;
+        } else {
+            flag = false;
+        }
+    }
+
+    return result;
 }
