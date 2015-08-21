@@ -83,7 +83,8 @@ class FileStoreHandler : virtual public FileStoreIf {
 
   void fixFingers() {
     // Your implementation goes here
-    printf("fixFingers\n");
+    dprintf("fixFingers\n");
+    dhtcntler.fixFingertb();
   }
 
   void findSucc(NodeID& _return, const std::string& key) {
@@ -98,7 +99,7 @@ class FileStoreHandler : virtual public FileStoreIf {
         _return = dhtcntler.getCur();
     } else {
         //先找这个key的前驱x，再找x的后继
-        NodeID pre = dhtcntler.findPred(key);
+        NodeID pre = dhtcntler.findPred3(key);
         dprintf("The pre for %s is %s:%d\n",key.c_str(),pre.ip.c_str(),pre.port);
         _return = dhtcntler.RPCGetNodeSucc(pre);
     }
@@ -106,13 +107,18 @@ class FileStoreHandler : virtual public FileStoreIf {
 
   void findPred(NodeID& _return, const std::string& key) {
     // Your implementation goes here
-    //dprintf("findPred\n");
+    dprintf("findPred\n");
     if (!dhtcntler.checkFtbInit()) {
         SystemException se;
         se.__set_message("finger table uninitialized\n");
         throw se;
     }
-    _return = dhtcntler.findPred(key);
+    {
+        _return = dhtcntler.findPred3(key);
+    }
+    {
+        //_return = dhtcntler.findPred4(key);
+    }
   }
 
   void getNodeSucc(NodeID& _return) {
@@ -182,12 +188,19 @@ class FileStoreHandler : virtual public FileStoreIf {
   void join(const NodeID& nodeId) {
     // Your implementation goes here
     dprintf("join\n");
-    std::vector<RFile> migratefiles;
-    dhtcntler.join(nodeId);
-    NodeID succ = dhtcntler.getSucc();
-    boost::shared_ptr<FileStoreClient> client(dhtcntler.getClientConn(succ.ip, succ.port));
-    client->pullUnownedFiles(migratefiles); 
-    pushUnownedFiles(migratefiles);
+    {
+        //stage 3
+        std::vector<RFile> migratefiles;
+        dhtcntler.join3(nodeId);
+        NodeID succ = dhtcntler.getSucc();
+        boost::shared_ptr<FileStoreClient> client(dhtcntler.getClientConn(succ.ip, succ.port));
+        client->pullUnownedFiles(migratefiles); 
+        pushUnownedFiles(migratefiles);
+    }
+    {
+        //stage 4
+        //dhtcntler.join4(nodeId);
+    }
   }
 
   void remove() {
@@ -228,11 +241,13 @@ class FileStoreHandler : virtual public FileStoreIf {
   void stabilize() {
     // Your implementation goes here
     dprintf("stabilize\n");
+    dhtcntler.stabilize();
   }
 
   void notify(const NodeID& nodeId) {
     // Your implementation goes here
     dprintf("notify\n");
+    dhtcntler.notify(nodeId);
   }
 
 };
