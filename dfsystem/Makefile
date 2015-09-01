@@ -15,23 +15,26 @@ LIB_PATH = -L$(THRIFT_PATH)/lib/
 
 OBJS=FileStore.o chord_types.o chord_constants.o fileworker.o sha256.o DHTController.o network.o
 OBJSERVER=FileStore_server.o
-OBJCLIENT=FileStore_client.o
+OBJJRCLIENT=FileStore_jrclient.o
+OBJIOCLIENT=FileStore_IOclient.o
 
 
-
-all: server client
+all: server jrclient ioclient
 
 server: $(OBJS) $(OBJSERVER)
 	$(CC) -o server.exec $^ $(CFLAGS) $(LIBS) $(LIB_PATH)
 	
-client: $(OBJS) $(OBJCLIENT)
-	$(CC) -o client.exec $^ $(CFLAGS) $(LIBS) $(LIB_PATH)
+jrclient: $(OBJS) $(OBJJRCLIENT)
+	$(CC) -o jrclient.exec $^ $(CFLAGS) $(LIBS) $(LIB_PATH)
 	
+ioclient: $(OBJS) $(OBJIOCLIENT)
+	$(CC) -o ioclient.exec $^ $(CFLAGS) $(LIBS) $(LIB_PATH)
+
 %.o: %.cpp
 	$(CC) $(INCLUDE_PATH) -c $(CFLAGS) -o $@ $^
 
 clean:
-	rm -f *.o server.exec client.exec
+	rm -f *.o *.exec
 
 rebuild: clean all
 
