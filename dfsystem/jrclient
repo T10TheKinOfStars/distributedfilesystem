@@ -1,0 +1,9 @@
+#!/bin/sh
+
+if [ ! -f jrclient.exec ]; then
+    echo "Please compile the program by 'make' first"
+    return
+fi
+
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
+./jrclient.exec $@

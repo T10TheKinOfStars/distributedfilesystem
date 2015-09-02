@@ -161,6 +161,7 @@ class FileStoreHandler : virtual public FileStoreIf {
     std::vector<RFileMetadata> metadatas;
     fworker.getAllFiles(metadatas);
     NodeID cur = dhtcntler.getCur(); 
+    dprintf("metadats' size is %d\n",metadatas.size());
     for (int i = 0; i < (int)metadatas.size(); ++i) {
         RFile tmp;
         int ret = fworker.readfile(cur.port, metadatas[i].owner, metadatas[i].filename, tmp);
@@ -192,10 +193,17 @@ class FileStoreHandler : virtual public FileStoreIf {
         //stage 3
         std::vector<RFile> migratefiles;
         dhtcntler.join3(nodeId);
+        dprintf("finish join3\n");
         NodeID succ = dhtcntler.getSucc();
         boost::shared_ptr<FileStoreClient> client(dhtcntler.getClientConn(succ.ip, succ.port));
+        dprintf("start pull\n");
         client->pullUnownedFiles(migratefiles); 
-        pushUnownedFiles(migratefiles);
+        dprintf("end pull\n");
+        if (!migratefiles.empty()) {
+            dprintf("start push\n");
+            pushUnownedFiles(migratefiles);
+            dprintf("end push\n");
+        }
     }
     {
         //stage 4
@@ -258,6 +266,7 @@ int main(int argc, char **argv) {
     exit(1);
   }
   std::string ip = get_local_ip();
+  std::cout<<"IP is "<<ip<<std::endl;
   int port = atoi(argv[1]);
   const int workerCount = 4;
 

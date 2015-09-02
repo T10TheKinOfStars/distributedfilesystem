@@ -136,6 +136,7 @@ std::vector<NodeID> DHTController::getFingertb() {
 
 void DHTController::join3(const NodeID& node) {
     try {
+        dprintf("in join3\n");
         AutoLock autolock(xlock);
         if (node != cur) {
             init_ftb(node);
@@ -157,6 +158,7 @@ void DHTController::join4(const NodeID& node) {
 }
 
 void DHTController::init_ftb(const NodeID& node) {
+    dprintf("in init_ftb\n");
     boost::shared_ptr<FileStoreClient> client(getClientConn(node.ip,node.port));
     if (client.get() == NULL) {
         SystemException se;
@@ -165,7 +167,7 @@ void DHTController::init_ftb(const NodeID& node) {
         se.__set_message(message);
         throw se;
     }
-    
+    dprintf("start to init\n");
     for (int i = 0; i < 256; ++i) {
         std::string succid = addID(cur.id,i);
         if (i > 0 && isBetween(cur.id, succid, dht[i-1].id)) {
@@ -186,6 +188,7 @@ void DHTController::init_ftb(const NodeID& node) {
 }
 
 void DHTController::update_others() {
+    dprintf("start to update others\n");
     for (int i = 0; i < 256; ++i) {
         NodeID pred;
         std::vector<NodeID> remotedht;
@@ -299,61 +302,43 @@ bool DHTController::isBetweenE(const std::string &left, const std::string &key, 
         return isBetween(left,key,right);
 }
 
-std::string DHTController::addID(const std::string& id, int exp) {
-//十六进制加    
-    double addend = pow(2,exp);
-    std::string addendstr = sha256_calc_hex(std::to_string(addend));
-    return stradd(id,addendstr);    
+#define DECTOHEX(a) ((a) >= 10? (a) - 10 + 'a': (a) + '0');
+#define HEXTODEC(a) ((a) >= 'a'? (a) - 'a' + 10 : (a) - '0')
+
+std::string DHTController::addID(const std::string &id, int exp)
+{
+    char idstr[65];
+    snprintf(idstr, 65, id.c_str());
+    int carry = (1 << (exp % 4));
+    for(int i = 256 / 4 - exp / 4 - 1; i >= 0; i--) {
+        int k = HEXTODEC(idstr[i]);
+        k += carry;
+        carry = k / 16;
+        idstr[i] = DECTOHEX(k % 16);
+        if (carry == 0)
+            break;
+    }
+
+    return idstr;
 }
 
-std::string DHTController::minusID(const std::string& id, int exp) {
-//十六进制减    
-    return strsub(id,sha256_calc_hex(std::to_string(pow(2,exp))));
-}
-
-#define DECTOHEX(x) ((x) >= 10?(x)-10+'a':(x)+'0')
-#define HEXTODEC(x) ((x) >= 'a'?(x)-'a'+10:(x)-'0')
-
-std::string DHTController::stradd(const std::string& str1, const std::string& str2) {
-    int carry = 0;
-    std::string result;
-    result.reserve(64);
-
-    for (int i = 63; i >=0; --i) {
-        int x = HEXTODEC(str1[i]);
-        int y = HEXTODEC(str2[i]);
-        int z = x + y + carry; 
-        if (z >= 16)
+std::string DHTController::minusID(const std::string &id, int exp)
+{
+    char idstr[65];
+    snprintf(idstr, 65, id.c_str());
+    int carry = (1 << (exp % 4));
+    for(int i = 256 / 4 - exp / 4 - 1; i >= 0; i--) {
+        int k = HEXTODEC(idstr[i]);
+        k -= carry;
+        carry = 0;
+        if (k < 0) {
             carry = 1;
-        else
-            carry = 0;
-        result[i] = DECTOHEX(z >= 16 ? z-16 : z);
+            k += 16;
+        }
+        idstr[i] = DECTOHEX(k);
+        if (carry == 0)
+            break;
     }
 
-    return result;
-}
-
-std::string DHTController::strsub(std::string str1, const std::string& str2) {
-    int borrow = 0;
-    bool flag = false;
-    std::string result;
-    result.reserve(64);
-
-    for (int i = 63; i >= 0; --i) {
-        int x = HEXTODEC(str1[i]);
-        int y = HEXTODEC(str2[i]);
-        borrow = x < y || flag ? 1 : 0;
-        if (borrow == 1) {
-            str1[i-1] = (int)str1[i] - 1;
-        }
-        result[i] = DECTOHEX(x + borrow - y);
-        if (str1[i-1] < '0') {
-            str1[i-1] = '0';
-            flag = true;
-        } else {
-            flag = false;
-        }
-    }
-
-    return result;
+    return idstr;
 }

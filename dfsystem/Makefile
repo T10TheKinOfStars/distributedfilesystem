@@ -22,16 +22,16 @@ OBJIOCLIENT=FileStore_IOclient.o
 all: server jrclient ioclient
 
 server: $(OBJS) $(OBJSERVER)
-	$(CC) -o server.exec $^ $(CFLAGS) $(LIBS) $(LIB_PATH)
+	$(CC) -o server.exec $^ $(CFLAGS) $(LIBS) $(LIB_PATH) $(DEBUG)
 	
 jrclient: $(OBJS) $(OBJJRCLIENT)
-	$(CC) -o jrclient.exec $^ $(CFLAGS) $(LIBS) $(LIB_PATH)
+	$(CC) -o jrclient.exec $^ $(CFLAGS) $(LIBS) $(LIB_PATH) $(DEBUG)
 	
 ioclient: $(OBJS) $(OBJIOCLIENT)
-	$(CC) -o ioclient.exec $^ $(CFLAGS) $(LIBS) $(LIB_PATH)
+	$(CC) -o ioclient.exec $^ $(CFLAGS) $(LIBS) $(LIB_PATH) $(DEBUG)
 
 %.o: %.cpp
-	$(CC) $(INCLUDE_PATH) -c $(CFLAGS) -o $@ $^
+	$(CC) $(INCLUDE_PATH) -c $(CFLAGS) -o $@ $^ $(DEBUG)
 
 clean:
 	rm -f *.o *.exec
