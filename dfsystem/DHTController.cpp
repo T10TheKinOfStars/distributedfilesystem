@@ -1,5 +1,17 @@
 #include "DHTController.h"
 
+void DHTController::serverinit(const std::string ip, int port) {
+    cur.__set_ip(ip);
+    cur.__set_port(port);
+    cur.__set_id(sha256_ip_port_hex(ip,port)); 
+    for (int i = 0; i < 256; ++i) 
+        dht[i] = cur;
+
+    pre = cur;
+    succ = cur;
+    inited = true;
+}
+
 void DHTController::setCur(const std::string &ip, int port) {
     cur.ip = ip;
     cur.port = port;
@@ -50,7 +62,6 @@ void DHTController::setFingerTB(const std::vector<NodeID> &nodes) {
 
 NodeID DHTController::findPred3(const std::string &key) {
     dprintf("In findPred. The key is %s\n",key.c_str());
-    AutoLock autolock(xlock);
     if (isBetweenE(cur.id,key,succ.id))
         return cur;
     //the for loop is closest_preceding_finger func
@@ -64,7 +75,6 @@ NodeID DHTController::findPred3(const std::string &key) {
 
 NodeID DHTController::findPred4(const std::string &key) {
     dprintf("In findPred. The key is %s\n",key.c_str());
-    AutoLock autolock(xlock);
     if (isBetweenE(cur.id,key,succ.id))
         return cur;
     //the for loop is closest_preceding_finger func
@@ -81,7 +91,6 @@ NodeID DHTController::findPred4(const std::string &key) {
 NodeID DHTController::RPCGetNodeSucc(NodeID node) {
     if (node.id == cur.id)
         return succ;
-    AutoLock autolock(xlock);
     boost::shared_ptr<FileStoreClient> client(getClientConn(node.ip,node.port));
     if (client.get() == NULL) {
         SystemException se;
@@ -97,7 +106,6 @@ NodeID DHTController::RPCGetNodeSucc(NodeID node) {
 }
 
 NodeID DHTController::RPCFindPred(NodeID node, const std::string &key) {
-    AutoLock autolock(xlock);
     dprintf("RPCFINDPRED node: %s:%d\n",node.ip.c_str(),node.port);
     boost::shared_ptr<FileStoreClient> client(getClientConn(node.ip,node.port));
     
@@ -137,8 +145,9 @@ std::vector<NodeID> DHTController::getFingertb() {
 void DHTController::join3(const NodeID& node) {
     try {
         dprintf("in join3\n");
-        AutoLock autolock(xlock);
-        if (node != cur) {
+        dprintf("check id\n");
+        if (node.id != cur.id) {
+            dprintf("node id != cur id\n");
             init_ftb(node);
             update_others();
         }
@@ -150,7 +159,6 @@ void DHTController::join3(const NodeID& node) {
 }
 
 void DHTController::join4(const NodeID& node) {
-    AutoLock autolock(xlock);
     boost::shared_ptr<FileStoreClient> client(getClientConn(node.ip,node.port));
     pre.id.clear();
     client->findSucc(succ, cur.id);
@@ -175,7 +183,9 @@ void DHTController::init_ftb(const NodeID& node) {
             dht[i] = dht[i-1];
         } else {
             NodeID succ;
+            dprintf("before find succ\n");
             client->findSucc(succ,succid);
+            dprintf("after find succ\n");
             if (isBetween(succid, cur.id, succ.id))
                 //如果当前节点（实际存在于网络中的）在succid和node的后继之间的话，那么succid的后继节点应该是当前节点。故更新之
                 succ = cur;
@@ -185,6 +195,7 @@ void DHTController::init_ftb(const NodeID& node) {
 
     succ = dht[0];
     pre = RPCFindPred(node,cur.id);
+    
 }
 
 void DHTController::update_others() {
@@ -246,8 +257,8 @@ void DHTController::remove() {
 
 void DHTController::stabilize() {
     NodeID succ_pred;
-    AutoLock autolock(xlock);
     boost::shared_ptr<FileStoreClient> client;
+    AutoLock autolock(xlock);
     if (succ.id == cur.id) {
         succ_pred = pre;
     } else {

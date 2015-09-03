@@ -22,9 +22,10 @@ private:
     NodeID cur;
     NodeID succ;
     bool inited;
-    std::mutex *xlock;
+    std::mutex *xlock = new std::mutex();
 public:
     boost::shared_ptr<FileStoreClient> getClientConn(const std::string &ip, int port);
+    void serverinit(std::string ip, int port);
     void setCur(const std::string &ip, int port);
     NodeID getCur();
     DHTController();

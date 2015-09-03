@@ -10,10 +10,14 @@
 
 class AutoLock {
     public:
-        AutoLock(std::mutex *vmutex):mylock(*vmutex) {mylock.lock();}
-        AutoLock(std::mutex &vmutex):mylock(vmutex) {mylock.lock();}
-        ~AutoLock() {mylock.unlock();}
+        AutoLock(std::mutex *vmutex):mylock(vmutex) {
+            dprintf("in autolock constructor\n");
+            mylock->lock();
+        }
+        ~AutoLock() {
+            mylock->unlock();
+        }
     private:
-        std::mutex &mylock;
+        std::mutex *mylock;
 };
 #endif

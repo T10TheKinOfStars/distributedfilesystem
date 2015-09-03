@@ -25,6 +25,7 @@ int main(int argc, char** argv) {
     std::string newip = argv[4];
     int newport = atoi(argv[5]);
     std::string op = argv[3];
+    std::vector<NodeID> dht;
     boost::shared_ptr<TSocket> socket(new TSocket(ip, port));
     boost::shared_ptr<TTransport> transport(new TBufferedTransport(socket));
     boost::shared_ptr<TProtocol> protocol(new TBinaryProtocol(transport)); 
@@ -56,6 +57,16 @@ int main(int argc, char** argv) {
                 std::cout<<ThriftJSONString(se)<<std::endl;
                 return -1;
             }
+        } else if (op == "ft") {
+            std::cout<<"get dht\n"<<std::endl;
+            try {
+                client.getFingertable(dht);
+            } catch (SystemException se) {
+                std::cout<<ThriftJSONString(se)<<std::endl;
+                return -1;
+            }
+            for (auto i : dht) 
+                std::cout<<i.ip<<"  "<<i.port<<"  "<<i.id<<std::endl;
         } else {
             std::cerr<<"operation argument error"<<std::endl;
             return 0;

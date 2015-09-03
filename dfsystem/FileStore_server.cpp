@@ -21,9 +21,8 @@ using namespace ::apache::thrift::concurrency;
 using boost::shared_ptr;
 
 FileWorker fworker;
+DHTController dhtcntler;
 class FileStoreHandler : virtual public FileStoreIf {
- private:
-    DHTController dhtcntler;
  public:
   FileStoreHandler(std::string ip, int port) {
     // Your initialization goes here
@@ -89,13 +88,15 @@ class FileStoreHandler : virtual public FileStoreIf {
 
   void findSucc(NodeID& _return, const std::string& key) {
     // Your implementation goes here
-    //dprintf("findSucc\n");
+    dprintf("findSucc\n");
     if (!dhtcntler.checkFtbInit()) {
         SystemException se;
         se.__set_message("finger table uninitialized\n");
         throw se;
     }
+    dprintf("dht has been inited.\n");
     if (key == dhtcntler.getCur().id) { 
+        dprintf("key equal to cur id\n");
         _return = dhtcntler.getCur();
     } else {
         //先找这个key的前驱x，再找x的后继
@@ -286,6 +287,7 @@ int main(int argc, char **argv) {
   TThreadedServer server(processor, serverTransport, transportFactory, protocolFactory);
 
   fworker.initFolder(port);
+  dhtcntler.serverinit(ip,port);
   server.serve();
   return 0;
 }
